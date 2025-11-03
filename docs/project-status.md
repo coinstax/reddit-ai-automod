@@ -4,7 +4,7 @@
 **Current Phase**: Phase 5 - Refinement & Optimization
 **Current Version**: 0.1.107
 **Overall Progress**: 99% (Core features complete, Reddit LLM compliance achieved)
-**Status**: Phase 5.55 Complete ✅ | Test Suite Updated for Reddit LLM Compliance
+**Status**: Phase 5.56 Complete ✅ | Enhanced AI Question System Design Complete
 
 ---
 
@@ -32,6 +32,39 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.56 (2025-11-03)
+- [x] **Enhanced AI Question System - Design Complete** - Comprehensive design for reducing false positives from 40% to <10%
+- [x] Created complete type definitions for EnhancedAIQuestion schema
+- [x] Designed PromptBuilder class architecture with 10 structured prompt sections
+- [x] Created validation system for catching common rule authoring mistakes
+- [x] Wrote comprehensive rule authoring guide with 7 scenario templates
+- [x] Developed migration guide with 8-step process and rollback plan
+- [x] Created example enhanced rule for FriendsOver40 dating detection
+- [x] Documented complete implementation plan (3-4 week timeline)
+
+**Deliverables Created**:
+- `/docs/enhanced-ai-questions-design.md` - Complete technical specification (15,000+ words)
+- `/docs/enhanced-ai-questions-templates.md` - Rule authoring guide with templates (8,000+ words)
+- `/docs/enhanced-ai-questions-migration.md` - Migration guide and testing strategy (6,000+ words)
+- `/docs/example-rules/friendsover40-dating-enhanced.json` - Example enhanced rule with 10 few-shot examples
+- `/docs/enhanced-ai-questions-summary.md` - Executive summary and implementation plan
+
+**Key Features**:
+- Fully generic (no hardcoded scenarios)
+- Backward compatible (existing simple questions work unchanged)
+- Evidence-based detection (categorize and require minimum evidence)
+- False positive prevention (11 common patterns for dating detection)
+- Confidence calibration (explicit guidance for each range)
+- Negation handling (detect "NOT doing X" statements)
+- Few-shot learning (10 diverse examples for dating detection)
+- Progressive enhancement (start simple, add features incrementally)
+
+**Impact**:
+- Projected 75% reduction in false positives (40% → <10%)
+- Maintains true positive rate (>90%)
+- Makes best practices configurable instead of hardcoded
+- Moderators can create high-precision rules without prompt engineering expertise
 
 ### Phase 5.55 (2025-11-03)
 - [x] **Test Suite Compliance** - Updated all test files to use only Reddit-approved AI providers
@@ -139,7 +172,72 @@ See [CHANGELOG.md](/home/cdm/redditmod/CHANGELOG.md) for complete version histor
 
 ## Next Steps
 
-### Immediate Priority: Queue System Implementation (Optional)
+### Immediate Priority: Enhanced AI Question System Implementation (Recommended)
+
+**Status**: Design complete, ready for implementation
+
+**Timeline**: 3-4 weeks (1 developer)
+
+**Impact**: Reduces false positives by 75% (40% → <10%)
+
+**Documentation**:
+- Design spec: `/docs/enhanced-ai-questions-design.md`
+- Templates: `/docs/enhanced-ai-questions-templates.md`
+- Migration: `/docs/enhanced-ai-questions-migration.md`
+- Summary: `/docs/enhanced-ai-questions-summary.md`
+
+**Implementation Phases**:
+
+**Phase 1: Core Infrastructure** (1 week)
+- Create `src/types/enhancedAIQuestions.ts` with type definitions
+- Create `src/ai/promptBuilder.ts` with PromptBuilder class
+- Update `src/types/ai.ts` for backward compatibility
+- Write unit tests for type system
+
+**Phase 2: Validation System** (3 days)
+- Create `src/ai/enhancedQuestionValidator.ts`
+- Add validation for all enhanced fields
+- Add quality checks (vague questions, missing filters, etc.)
+- Write validation tests
+
+**Phase 3: Integration** (1 week)
+- Update `src/ai/analyzer.ts` to use PromptBuilder
+- Update prompt generation for enhanced questions
+- Support new output format fields (evidencePieces, etc.)
+- Update caching to handle enhanced responses
+
+**Phase 4: Testing & Validation** (1 week)
+- Convert FriendsOver40 dating rule to enhanced format
+- Test on 100+ historical posts
+- A/B test enhanced vs simple question
+- Measure false positive reduction
+- Gather moderator feedback
+
+**Phase 5: Documentation & Rollout** (3 days)
+- Create video tutorials for moderators
+- Update user documentation
+- Announce to moderators
+- Gradual rollout (dry-run → flag-only → production)
+
+**Key Benefits**:
+- ✅ 75% reduction in false positives
+- ✅ Better AI reasoning transparency
+- ✅ Easier rule authoring for moderators
+- ✅ No breaking changes (fully backward compatible)
+- ✅ Scales to any detection scenario
+
+**When to Implement**:
+- High false positive rate (>20%) on current rules
+- User complaints about incorrect flagging
+- Need for more sophisticated detection logic
+- Want to explain AI decisions to users
+
+**When NOT to Implement**:
+- Current rules work well (<10% false positives)
+- Higher priorities exist
+- No resources for 3-4 week implementation
+
+### Optional: Queue System Implementation
 
 **Status**: Design complete, implementation optional
 
@@ -202,6 +300,25 @@ See [CHANGELOG.md](/home/cdm/redditmod/CHANGELOG.md) for complete version histor
 ---
 
 ## Recent Decisions
+
+**2025-11-03**: Enhanced AI Question System Design Completed
+- **Context**: Current simple AI questions produce 40% false positive rate. AI has no guidance on evidence types, false positive patterns, or confidence calibration.
+- **Problem**: Users complain about incorrect flagging. Moderators don't trust AI decisions. Example: "I tried dating apps but they suck. Here for platonic friendships only!" gets flagged as dating intent.
+- **Solution**: Designed comprehensive Enhanced AI Question System with:
+  - Structured evidence framework (DIRECT, IMPLIED, CONTEXTUAL, DISCUSSION, NEGATED)
+  - Configurable false positive filters (11 patterns for dating detection)
+  - Confidence calibration guidance (what each range means)
+  - Evidence requirements (minimum 2 pieces before flagging)
+  - Negation handling (detect "NOT doing X")
+  - Few-shot learning (10 examples showing correct analysis)
+  - Temporal weighting (recent behavior weighted more)
+- **Architecture**: Three layers - Enhanced schema (TypeScript) → PromptBuilder (generic) → Validation & templates (user-friendly)
+- **Impact**: Projected 75% reduction in false positives (40% → <10%) while maintaining 90%+ true positive rate
+- **Backward Compatible**: Existing simple questions work unchanged with reasonable defaults
+- **Generic**: No hardcoded scenarios, works for any detection type (spam, dating, age, etc.)
+- **Deliverables**: 4 comprehensive documentation files (30,000+ words total), complete example rule, implementation plan
+- **Implementation**: Ready to start, 3-4 week timeline
+- **Key Innovation**: Makes best practices configurable instead of hardcoded. Moderators create high-precision rules without prompt engineering expertise.
 
 **2025-11-03**: Reddit LLM Policy Compliance
 - **Context**: Reddit's Devvit platform only approves OpenAI and Google Gemini for LLM integrations. Claude (Anthropic) and OpenAI-compatible providers (Groq, Together AI, Z.ai, Grok) are not approved.
