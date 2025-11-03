@@ -4,7 +4,7 @@
 **Current Phase**: Phase 5 - Refinement & Optimization
 **Current Version**: 0.1.107
 **Overall Progress**: 99% (Core features complete, Reddit LLM compliance achieved)
-**Status**: Phase 5.58 Complete ✅ | Evidence Extraction Implementation Complete
+**Status**: Phase 5.59 Complete ✅ | Enhanced AI Question Validation Implemented
 
 ---
 
@@ -32,6 +32,45 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.59 (2025-11-03)
+- [x] **Enhanced AI Question Validation** - Added validation for enhanced AI question fields in rule schema validator
+- [x] Implemented `validateEnhancedAIFields()` method to validate optional enhanced fields
+- [x] Added field-specific validators for:
+  - `confidenceGuidance` - Validates at least one confidence level is defined
+  - `analysisFramework` - Validates evidenceTypes and falsePositiveFilters are arrays
+  - `evidenceRequired` - Validates minPieces >= 1 and types is array
+  - `negationHandling` - Validates enabled is boolean and patterns is array
+  - `examples` - Validates array structure and required fields (scenario, expectedAnswer, confidence 0-100)
+- [x] Integrated enhanced validation into existing `validateSchema()` method
+- [x] Created comprehensive test suite with 26 tests covering all validation scenarios
+- [x] All enhanced fields are optional - maintains full backward compatibility with simple questions
+- [x] Helpful warning messages include field path and specific issue
+- [x] All tests passing (26/26) with no TypeScript errors
+
+**Key Implementation Details**:
+- All enhanced field validation is optional (no warnings if fields omitted)
+- Warnings only generated for clear structural errors (wrong types, invalid ranges)
+- Simple questions without enhanced fields pass validation with no warnings
+- Valid enhanced questions pass validation with no warnings
+- Invalid enhanced fields produce helpful, actionable warnings
+- Follows existing code patterns and style in schemaValidator.ts
+
+**Files Modified**:
+- `src/rules/schemaValidator.ts` - Added 6 new validation methods (193 lines added)
+- `src/rules/__tests__/enhancedAIValidation.test.ts` - NEW - Comprehensive test suite (972 lines)
+
+**Testing Results**:
+- 26 comprehensive tests all passing
+- Tests cover backward compatibility, valid configurations, invalid configurations, and complex scenarios
+- No TypeScript compilation errors
+- Validation works as expected for all enhanced field types
+
+**Impact**:
+- Rule schema validator now supports Enhanced AI Questions system
+- Moderators will receive helpful warnings for invalid enhanced field configurations
+- Foundation for reduced false positives through confidence calibration and evidence requirements
+- Ready for integration with rules engine and PromptBuilder
 
 ### Phase 5.58 (2025-11-03)
 - [x] **Evidence Extraction Implementation** - Added structured evidence extraction to AI question responses for transparency and debugging

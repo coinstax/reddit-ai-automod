@@ -242,6 +242,197 @@ export class RuleSchemaValidator {
   }
 
   /**
+   * Validate enhanced AI question fields
+   *
+   * Checks optional enhanced fields when present. All enhanced fields
+   * are optional for backward compatibility.
+   *
+   * @param rule - Rule to validate
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateEnhancedAIFields(
+    rule: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (!rule.ai) return;
+
+    // Confidence guidance validation
+    if (rule.ai.confidenceGuidance) {
+      this.validateConfidenceGuidance(rule.ai.confidenceGuidance, rulePrefix, warnings);
+    }
+
+    // Analysis framework validation
+    if (rule.ai.analysisFramework) {
+      this.validateAnalysisFramework(rule.ai.analysisFramework, rulePrefix, warnings);
+    }
+
+    // Evidence requirements validation
+    if (rule.ai.evidenceRequired) {
+      this.validateEvidenceRequired(rule.ai.evidenceRequired, rulePrefix, warnings);
+    }
+
+    // Negation handling validation
+    if (rule.ai.negationHandling) {
+      this.validateNegationHandling(rule.ai.negationHandling, rulePrefix, warnings);
+    }
+
+    // Few-shot examples validation
+    if (rule.ai.examples) {
+      this.validateFewShotExamples(rule.ai.examples, rulePrefix, warnings);
+    }
+  }
+
+  /**
+   * Validate confidence guidance configuration
+   *
+   * Ensures at least one confidence level is defined when confidenceGuidance is provided.
+   *
+   * @param cg - Confidence guidance object
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateConfidenceGuidance(
+    cg: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (!cg.lowConfidence && !cg.mediumConfidence && !cg.highConfidence) {
+      warnings.push(
+        `${rulePrefix}: confidenceGuidance provided but no confidence levels defined`
+      );
+    }
+  }
+
+  /**
+   * Validate analysis framework configuration
+   *
+   * Checks that evidenceTypes and falsePositiveFilters are arrays if provided.
+   *
+   * @param af - Analysis framework object
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateAnalysisFramework(
+    af: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (af.evidenceTypes && !Array.isArray(af.evidenceTypes)) {
+      warnings.push(
+        `${rulePrefix}: analysisFramework.evidenceTypes must be an array`
+      );
+    }
+
+    if (af.falsePositiveFilters && !Array.isArray(af.falsePositiveFilters)) {
+      warnings.push(
+        `${rulePrefix}: analysisFramework.falsePositiveFilters must be an array`
+      );
+    }
+  }
+
+  /**
+   * Validate evidence requirements configuration
+   *
+   * Ensures minPieces is positive and types is an array if provided.
+   *
+   * @param er - Evidence required object
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateEvidenceRequired(
+    er: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (er.minPieces !== undefined && er.minPieces < 1) {
+      warnings.push(
+        `${rulePrefix}: evidenceRequired.minPieces must be at least 1`
+      );
+    }
+
+    if (er.types && !Array.isArray(er.types)) {
+      warnings.push(
+        `${rulePrefix}: evidenceRequired.types must be an array`
+      );
+    }
+  }
+
+  /**
+   * Validate negation handling configuration
+   *
+   * Ensures enabled is boolean and patterns is an array if provided.
+   *
+   * @param nh - Negation handling object
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateNegationHandling(
+    nh: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (typeof nh.enabled !== 'boolean') {
+      warnings.push(
+        `${rulePrefix}: negationHandling.enabled must be a boolean`
+      );
+    }
+
+    if (nh.patterns && !Array.isArray(nh.patterns)) {
+      warnings.push(
+        `${rulePrefix}: negationHandling.patterns must be an array`
+      );
+    }
+  }
+
+  /**
+   * Validate few-shot examples configuration
+   *
+   * Ensures examples is an array and each example has required fields with valid values.
+   *
+   * @param examples - Few-shot examples array
+   * @param rulePrefix - Prefix for warning messages
+   * @param warnings - Array to append warnings to
+   * @private
+   */
+  private static validateFewShotExamples(
+    examples: any,
+    rulePrefix: string,
+    warnings: string[]
+  ): void {
+    if (!Array.isArray(examples)) {
+      warnings.push(
+        `${rulePrefix}: examples must be an array`
+      );
+      return;
+    }
+
+    examples.forEach((ex, i) => {
+      if (!ex.scenario) {
+        warnings.push(
+          `${rulePrefix}: examples[${i}] missing 'scenario' field`
+        );
+      }
+      if (!ex.expectedAnswer) {
+        warnings.push(
+          `${rulePrefix}: examples[${i}] missing 'expectedAnswer' field`
+        );
+      }
+      if (ex.confidence !== undefined && (ex.confidence < 0 || ex.confidence > 100)) {
+        warnings.push(
+          `${rulePrefix}: examples[${i}] confidence must be between 0-100`
+        );
+      }
+    });
+  }
+
+  /**
    * Validate against RuleSet schema
    *
    * Performs comprehensive validation of rule structure including:
@@ -421,6 +612,9 @@ export class RuleSchemaValidator {
           if (!rule.ai.question) {
             warnings.push(`${rulePrefix}: AI rule missing 'ai.question'`);
           }
+
+          // Validate enhanced AI question fields (optional)
+          this.validateEnhancedAIFields(rule, rulePrefix, warnings);
         }
       }
 
