@@ -1,4 +1,24 @@
 /**
+ * ⚠️ DEPRECATED - Provider not approved by Reddit Devvit policy (as of 2025-11-03)
+ *
+ * Reddit LLM Policy: https://developers.reddit.com/docs/devvit_rules#only-use-approved-llms
+ * Approved LLMs: OpenAI and Gemini ONLY
+ *
+ * This provider has been deprecated to comply with Reddit's requirements.
+ * Code is preserved for potential future restoration if policy changes.
+ *
+ * DO NOT REMOVE THIS FILE - It may be reinstated if Reddit approves additional providers.
+ *
+ * To restore this provider if policy changes:
+ * 1. Uncomment all code below
+ * 2. Add provider type back to AIProviderType in src/types/ai.ts
+ * 3. Add API domain back to HTTP allowlist in devvit.json
+ * 4. Add settings fields back in src/main.tsx
+ * 5. Update analyzer.ts getProvider() method
+ */
+
+/*
+/**
  * AI Automod - AI Automod for Reddit
  * Copyright (C) 2025 CoinsTax LLC
  *
@@ -359,3 +379,4 @@ export class ClaudeProvider implements IAIProvider {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
+*/
