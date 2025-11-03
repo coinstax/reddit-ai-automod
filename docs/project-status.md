@@ -4,7 +4,7 @@
 **Current Phase**: Phase 5 - Refinement & Optimization
 **Current Version**: 0.1.107
 **Overall Progress**: 99% (Core features complete, Reddit LLM compliance achieved)
-**Status**: Phase 5.54 Complete ✅ | Reddit LLM Policy Compliance (OpenAI + Gemini only)
+**Status**: Phase 5.55 Complete ✅ | Test Suite Updated for Reddit LLM Compliance
 
 ---
 
@@ -32,6 +32,23 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.55 (2025-11-03)
+- [x] **Test Suite Compliance** - Updated all test files to use only Reddit-approved AI providers
+- [x] Fixed analyzer.test.ts: Replaced 'claude' with 'openai', added missing 'model' property
+- [x] Fixed costTracker.test.ts: Replaced 'claude' and 'openai-compatible' with 'openai' and 'gemini'
+- [x] Fixed requestCoalescer.test.ts: Replaced 'claude' with 'openai', added 'model' property
+- [x] Fixed costTracker.ts: Updated live code to only use 'openai' and 'gemini' providers
+- [x] Updated all Record<AIProviderType, ...> objects to use only approved providers
+- [x] Fixed TypeScript errors in test files (4 files fixed, all target errors resolved)
+- [x] Verified type safety with `npm run typecheck`
+- [x] All test files now comply with AIProviderType = 'openai' | 'gemini'
+
+**Technical Changes**:
+- analyzer.test.ts: Added 'model' field to mock AIAnalysisResult
+- costTracker.test.ts: Updated 17 test cases to use approved providers
+- requestCoalescer.test.ts: Updated mock analysis result generator
+- costTracker.ts: Updated getBudgetStatus, resetDailyBudget, getSpendingReport
 
 ### Phase 5.54 (2025-11-03)
 - [x] **Reddit LLM Policy Compliance** - Updated app to comply with Reddit's Devvit LLM approval restrictions
