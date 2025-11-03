@@ -87,29 +87,21 @@ export const AI_CONFIG: AIConfig = {
    * Note: API keys are NOT stored here - they are in Devvit Secrets Manager
    */
   providers: {
-    claude: {
-      type: 'claude' as const,
-      model: 'claude-3-5-haiku-20241022',
-      enabled: true,
-      priority: 1, // Primary provider - best balance of speed and quality
-      costPerMTokenInput: 1.0,
-      costPerMTokenOutput: 5.0,
-    },
     openai: {
       type: 'openai' as const,
       model: 'gpt-4o-mini',
       enabled: true,
-      priority: 2, // Fallback provider - cheapest option with good quality
+      priority: 1, // Primary provider - Reddit approved, cheap, good quality
       costPerMTokenInput: 0.15,
       costPerMTokenOutput: 0.6,
     },
-    'openai-compatible': {
-      type: 'openai-compatible' as const,
-      model: 'configurable',
+    gemini: {
+      type: 'gemini' as const,
+      model: 'gemini-1.5-flash',
       enabled: true,
-      priority: 3, // Third fallback - configurable via settings
-      costPerMTokenInput: 0.27,
-      costPerMTokenOutput: 1.1,
+      priority: 2, // Fallback provider - Reddit approved, cost-effective
+      costPerMTokenInput: 0.075,
+      costPerMTokenOutput: 0.30,
     },
   },
 
@@ -338,22 +330,15 @@ export async function getEnabledProviders(context: any): Promise<AIProviderType[
 
 /**
  * Check if a provider has the required configuration
- * - claude: needs claudeApiKey
  * - openai: needs openaiApiKey
- * - openai-compatible: needs openaiCompatibleApiKey + baseURL + model
+ * - gemini: needs geminiApiKey
  */
 async function checkProviderHasConfig(aiSettings: any, provider: AIProviderType): Promise<boolean> {
   switch (provider) {
-    case 'claude':
-      return !!aiSettings.claudeApiKey;
     case 'openai':
       return !!aiSettings.openaiApiKey;
-    case 'openai-compatible':
-      return !!(
-        aiSettings.openaiCompatibleApiKey &&
-        aiSettings.openaiCompatibleBaseURL &&
-        aiSettings.openaiCompatibleModel
-      );
+    case 'gemini':
+      return !!aiSettings.geminiApiKey;
     default:
       return false;
   }

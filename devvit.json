@@ -14,12 +14,8 @@
     "http": {
       "enable": true,
       "domains": [
-        "api.anthropic.com",
         "api.openai.com",
-        "api.z.ai",
-        "api.x.ai",
-        "api.groq.com",
-        "api.deepseek.com"
+        "generativelanguage.googleapis.com"
       ]
     },
     "redis": true,

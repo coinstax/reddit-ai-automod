@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.107] - 2025-11-03
+
+### Changed - Reddit LLM Compliance
+
+**BREAKING CHANGES**: This release updates the app to comply with Reddit's Devvit LLM policy that only approves OpenAI and Google Gemini providers.
+
+- **BREAKING**: Removed Claude (Anthropic) provider - not approved by Reddit for Devvit apps
+- **BREAKING**: Removed OpenAI Compatible providers (Groq, Together AI, Z.ai, X.AI/Grok) - not approved by Reddit
+- Added Google Gemini 1.5 Flash provider - newly approved by Reddit
+- Changed default primary provider from Claude to OpenAI
+- Changed default fallback provider from OpenAI to Gemini
+- Updated HTTP allowlist to only include approved domains:
+  - `api.openai.com` (OpenAI)
+  - `generativelanguage.googleapis.com` (Google Gemini)
+- Preserved deprecated provider code in codebase for potential future restoration if Reddit policies change
+- Updated settings UI to only show approved providers (OpenAI, Gemini)
+
+### Migration Guide for Existing Installations
+
+**If you were using Claude (Anthropic)**:
+1. Obtain an OpenAI API key: https://platform.openai.com/api-keys
+2. OR obtain a Gemini API key: https://aistudio.google.com/apikey
+3. Update your app settings with the new API key
+4. Change primary provider to 'openai' or 'gemini'
+5. Old Claude API key will be ignored (no errors, just unused)
+
+**If you were using OpenAI Compatible providers (Groq, Together AI, Z.ai, Grok)**:
+1. Switch to OpenAI or Gemini (see above)
+2. Old OpenAI Compatible settings will be ignored (no errors, just unused)
+
+**If you were using OpenAI**:
+- No changes required, continue using your existing configuration
+
+### Cost Impact
+
+Switching to Gemini can significantly reduce AI costs:
+- **Gemini pricing**: $0.075 per 1M input tokens, $0.30 per 1M output tokens
+- **OpenAI pricing**: $0.15 per 1M input tokens, $0.60 per 1M output tokens
+- **Gemini is 50% cheaper than OpenAI**
+- **Gemini is 70% cheaper than Claude** (removed)
+
+### Technical Details
+
+See `docs/llm-compliance.md` for full compliance documentation including:
+- Reddit's approved provider list
+- Technical implementation details
+- Provider comparison and cost analysis
+- Future considerations
+
 ## [0.1.105] - 2025-10-30
 
 ### Added

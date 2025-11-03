@@ -1,18 +1,18 @@
 # Project Status
 
-**Last Updated**: 2025-10-31
+**Last Updated**: 2025-11-03
 **Current Phase**: Phase 5 - Refinement & Optimization
-**Current Version**: 0.1.106
-**Overall Progress**: 99% (Core features complete, trust system working perfectly)
-**Status**: Phase 5.53 Complete ✅ | PM notification error handling + Queue system design
+**Current Version**: 0.1.107
+**Overall Progress**: 99% (Core features complete, Reddit LLM compliance achieved)
+**Status**: Phase 5.54 Complete ✅ | Reddit LLM Policy Compliance (OpenAI + Gemini only)
 
 ---
 
 ## Project Overview
 
-Reddit AI Automod is a user profiling & analysis system for Reddit communities. Uses AI (Claude/OpenAI/OpenAI-Compatible) to detect problematic posters: romance scammers, dating seekers, underage users, and spammers.
+Reddit AI Automod is a user profiling & analysis system for Reddit communities. Uses AI (OpenAI/Gemini) to detect problematic posters: romance scammers, dating seekers, underage users, and spammers.
 
-**Stack**: Reddit Devvit (TypeScript), Redis, AI (Claude 3.5 Haiku/OpenAI/OpenAI-Compatible)
+**Stack**: Reddit Devvit (TypeScript), Redis, AI (OpenAI GPT-4o-mini/Google Gemini 1.5 Flash)
 **Target Subreddits**: r/FriendsOver40, r/FriendsOver50, r/bitcointaxes
 
 ---
@@ -32,6 +32,25 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.54 (2025-11-03)
+- [x] **Reddit LLM Policy Compliance** - Updated app to comply with Reddit's Devvit LLM approval restrictions
+- [x] Removed Claude (Anthropic) provider - not approved by Reddit for Devvit apps
+- [x] Removed OpenAI Compatible providers (Groq, Together AI, Z.ai, X.AI/Grok) - not approved by Reddit
+- [x] Added Google Gemini 1.5 Flash provider - newly approved by Reddit
+- [x] Changed default primary provider from Claude to OpenAI
+- [x] Changed default fallback provider from OpenAI to Gemini
+- [x] Updated HTTP allowlist to only include approved domains (api.openai.com, generativelanguage.googleapis.com)
+- [x] Preserved deprecated provider code for potential future restoration if policies change
+- [x] Updated settings UI to only show approved providers (OpenAI, Gemini)
+- [x] Documented compliance requirements and migration path in docs/llm-compliance.md
+- [x] Deployed version 0.1.107
+
+**Migration Impact for Existing Users**:
+- Claude users must reconfigure to use OpenAI or Gemini
+- OpenAI Compatible users must switch to approved providers
+- Old API keys ignored (no errors, just unused)
+- Gemini pricing: 50% cheaper than OpenAI, 70% cheaper than Claude
 
 ### Phase 5.53 (2025-10-31)
 - [x] Improved PM notification error handling with detailed error messages
@@ -149,10 +168,9 @@ See [CHANGELOG.md](/home/cdm/redditmod/CHANGELOG.md) for complete version histor
   - Batch processing for multiple posts (via queue system if needed)
   - Optimized post history fetching
 
-- **Additional AI Providers**
-  - Anthropic Claude 3 Opus (higher accuracy)
-  - Google Gemini support
-  - More cost-effective provider options
+- **Additional AI Providers** (subject to Reddit approval)
+  - Additional models from approved providers (OpenAI, Google)
+  - Monitor Reddit's approved provider list for updates
 
 - **Enhanced Analytics Dashboard**
   - Detailed trust score trends
@@ -167,6 +185,20 @@ See [CHANGELOG.md](/home/cdm/redditmod/CHANGELOG.md) for complete version histor
 ---
 
 ## Recent Decisions
+
+**2025-11-03**: Reddit LLM Policy Compliance
+- **Context**: Reddit's Devvit platform only approves OpenAI and Google Gemini for LLM integrations. Claude (Anthropic) and OpenAI-compatible providers (Groq, Together AI, Z.ai, Grok) are not approved.
+- **Changes Made**:
+  - Removed Claude provider from active configuration
+  - Removed OpenAI Compatible providers (all variants)
+  - Added Google Gemini 1.5 Flash provider
+  - Updated defaults: primary='openai', fallback='gemini'
+  - Updated HTTP allowlist to only approved domains
+  - Preserved deprecated code for potential future restoration
+- **Cost Impact**: Gemini is 50% cheaper than OpenAI ($0.075 vs $0.15 per 1M input tokens), 70% cheaper than Claude
+- **Migration Path**: Existing users with Claude/OpenAI-compatible keys must reconfigure to use OpenAI or Gemini
+- **Documentation**: Full compliance details in `docs/llm-compliance.md`
+- **Impact**: Ensures app approval and continued support on Reddit's Devvit platform
 
 **2025-10-31**: Documented async queue system design (optional optimization)
 - **Context**: User questioned whether inline processing could overwhelm system during high-traffic periods or cause lag/crashes
@@ -289,12 +321,12 @@ For complete version history, see [CHANGELOG.md](/home/cdm/redditmod/CHANGELOG.m
 
 ## Quick Stats
 
-- **Total Versions**: 106 (0.0.1 → 0.1.106)
+- **Total Versions**: 107 (0.0.1 → 0.1.107)
 - **Current Trust System**: Working perfectly in production
-- **AI Providers**: Claude 3.5 Haiku, OpenAI, OpenAI-Compatible (z.ai, Groq, Together AI, X.AI/Grok)
+- **AI Providers**: OpenAI GPT-4o-mini, Google Gemini 1.5 Flash (Reddit-approved only)
 - **Active Subreddits**: 3 target communities
 - **Core Features**: 100% complete
 - **Test Coverage**: Comprehensive (93 tests for content sanitizer alone)
-- **Provider Fallback**: Fixed - respects 'none' setting correctly
+- **Reddit Compliance**: Fully compliant with Devvit LLM policies
 - **Error Logging**: Enhanced - captures full API error details
 - **PM Notifications**: Enhanced error handling with helpful messages

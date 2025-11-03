@@ -65,22 +65,31 @@ export interface EnvConfig {
 /**
  * AI Provider Configuration from Settings
  * Contains API keys and provider selection configured via Devvit Settings UI
+ *
+ * Reddit Policy: https://developers.reddit.com/docs/devvit_rules#only-use-approved-llms
+ * Only OpenAI and Gemini providers are approved.
  */
 export interface AIProviderConfig {
-  /** Claude API key (optional - from settings) */
-  claudeApiKey?: string;
   /** OpenAI API key (optional - from settings) */
   openaiApiKey?: string;
-  /** OpenAI Compatible API key (optional - from settings) */
-  openaiCompatibleApiKey?: string;
-  /** OpenAI Compatible base URL (optional - from settings) */
-  openaiCompatibleBaseURL?: string;
-  /** OpenAI Compatible model name (optional - from settings) */
-  openaiCompatibleModel?: string;
+  /** Google Gemini API key (optional - from settings) */
+  geminiApiKey?: string;
   /** Primary AI provider to use */
-  primaryProvider: 'claude' | 'openai' | 'openai-compatible';
+  primaryProvider: 'openai' | 'gemini';
   /** Fallback provider if primary fails */
-  fallbackProvider: 'claude' | 'openai' | 'openai-compatible' | 'none';
+  fallbackProvider: 'openai' | 'gemini' | 'none';
+
+  /**
+   * DEPRECATED - Not approved by Reddit Devvit policy (as of 2025-11-03)
+   * Preserved for potential future restoration if policy changes
+   *
+   * claudeApiKey?: string;
+   * openaiCompatibleApiKey?: string;
+   * openaiCompatibleBaseURL?: string;
+   * openaiCompatibleModel?: string;
+   * primaryProvider: 'claude' | 'openai' | 'openai-compatible' | 'gemini';
+   * fallbackProvider: 'claude' | 'openai' | 'openai-compatible' | 'gemini' | 'none';
+   */
 }
 
 /**

@@ -47,7 +47,8 @@ describe('AIAnalyzer', () => {
   const mockAnalysisResult: AIAnalysisResult = {
     userId: mockUserId,
     timestamp: Date.now(),
-    provider: 'claude' as AIProviderType,
+    provider: 'openai' as AIProviderType,
+    model: 'gpt-4o-mini',
     correlationId: 'test-correlation-id',
     promptVersion: 'v1.0',
     cacheTTL: 86400,

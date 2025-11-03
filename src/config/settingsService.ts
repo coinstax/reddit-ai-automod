@@ -89,17 +89,16 @@ export class SettingsService {
    * Returns API keys and provider selection configured via Devvit Settings UI.
    * Results are cached for 60 seconds to reduce repeated settings reads.
    *
-   * **Settings Fields** (from Phase 4.2 implementation):
-   * - `claudeApiKey` (string)
+   * **Settings Fields** (Reddit Approved Providers Only):
    * - `openaiApiKey` (string)
-   * - `deepseekApiKey` (string)
-   * - `primaryProvider` (string: 'claude' | 'openai' | 'deepseek')
-   * - `fallbackProvider` (string: 'claude' | 'openai' | 'deepseek' | 'none')
+   * - `geminiApiKey` (string)
+   * - `primaryProvider` (string: 'openai' | 'gemini')
+   * - `fallbackProvider` (string: 'openai' | 'gemini' | 'none')
    *
    * **Default Values**:
    * - All API keys default to undefined (no keys configured)
-   * - primaryProvider defaults to 'claude'
-   * - fallbackProvider defaults to 'openai'
+   * - primaryProvider defaults to 'openai'
+   * - fallbackProvider defaults to 'gemini'
    *
    * @param context - Devvit context with settings access
    * @returns AI provider configuration
@@ -107,8 +106,8 @@ export class SettingsService {
    * @example
    * ```typescript
    * const config = await SettingsService.getAIConfig(context);
-   * console.log(config.primaryProvider); // 'claude'
-   * console.log(config.claudeApiKey); // 'sk-...' or undefined
+   * console.log(config.primaryProvider); // 'openai'
+   * console.log(config.openaiApiKey); // 'sk-...' or undefined
    * ```
    */
   static async getAIConfig(context: Context): Promise<AIProviderConfig> {
@@ -131,13 +130,10 @@ export class SettingsService {
         : settings.fallbackProvider;
 
       const config: AIProviderConfig = {
-        claudeApiKey: settings.claudeApiKey as string | undefined,
         openaiApiKey: settings.openaiApiKey as string | undefined,
-        openaiCompatibleApiKey: settings.openaiCompatibleApiKey as string | undefined,
-        openaiCompatibleBaseURL: settings.openaiCompatibleBaseURL as string | undefined,
-        openaiCompatibleModel: settings.openaiCompatibleModel as string | undefined,
-        primaryProvider: (primaryProviderValue as 'claude' | 'openai' | 'openai-compatible') ?? 'claude',
-        fallbackProvider: (fallbackProviderValue as 'claude' | 'openai' | 'openai-compatible' | 'none') ?? 'openai',
+        geminiApiKey: settings.geminiApiKey as string | undefined,
+        primaryProvider: (primaryProviderValue as 'openai' | 'gemini') ?? 'openai',
+        fallbackProvider: (fallbackProviderValue as 'openai' | 'gemini' | 'none') ?? 'gemini',
       };
 
       // Cache the result
@@ -152,8 +148,10 @@ export class SettingsService {
 
       // Return defaults on error (graceful degradation)
       return {
-        primaryProvider: 'claude',
-        fallbackProvider: 'openai',
+        openaiApiKey: undefined,
+        geminiApiKey: undefined,
+        primaryProvider: 'openai',
+        fallbackProvider: 'gemini',
       };
     }
   }

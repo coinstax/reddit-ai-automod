@@ -29,12 +29,25 @@
 import { UserProfile, UserPostHistory } from './profile.js';
 
 /**
- * Supported AI provider types
- * - claude: Anthropic Claude 3.5 Haiku (primary)
- * - openai: OpenAI GPT-4o Mini (fallback)
- * - openai-compatible: Custom OpenAI-compatible endpoints (Groq, Together AI, vLLM, Ollama, etc.)
+ * Supported AI provider types (Reddit Devvit Approved Only)
+ *
+ * Reddit Policy: https://developers.reddit.com/docs/devvit_rules#only-use-approved-llms
+ * Only OpenAI and Gemini are approved for use in Devvit apps.
+ *
+ * - openai: OpenAI GPT-4o Mini
+ * - gemini: Google Gemini 1.5 Flash
  */
-export type AIProviderType = 'claude' | 'openai' | 'openai-compatible';
+export type AIProviderType = 'openai' | 'gemini';
+
+/**
+ * DEPRECATED - Not approved by Reddit Devvit policy (as of 2025-11-03)
+ * Preserved for potential future restoration if policy changes
+ *
+ * - claude: Anthropic Claude 3.5 Haiku
+ * - openai-compatible: Custom OpenAI-compatible endpoints (Groq, Together AI, vLLM, Ollama, etc.)
+ *
+ * export type AIProviderType = 'claude' | 'openai' | 'openai-compatible' | 'gemini';
+ */
 
 /**
  * Classification of AI errors for specific handling strategies

@@ -111,9 +111,10 @@ import crypto from 'crypto';
 import { AIAnalysisRequest, AIAnalysisResult, AIQuestion, AIQuestionRequest, AIQuestionBatchResult, AIProviderType } from '../types/ai.js';
 import { IAIProvider } from './provider.js';
 import { UserProfile, UserPostHistory } from '../types/profile.js';
-import { ClaudeProvider } from './claude.js';
+// DEPRECATED: Claude not approved by Reddit - import { ClaudeProvider } from './claude.js';
 import { OpenAIProvider } from './openai.js';
-import { OpenAICompatibleProvider } from './openaiCompatible.js';
+// DEPRECATED: OpenAI Compatible not approved by Reddit - import { OpenAICompatibleProvider } from './openaiCompatible.js';
+import { GeminiProvider } from './gemini.js';
 import { RequestCoalescer } from './requestCoalescer.js';
 import { CostTracker } from './costTracker.js';
 import { getCacheTTLForTrustScore } from '../config/ai.js';
@@ -1161,34 +1162,48 @@ export class AIAnalyzer {
    * @private
    */
   private getModelName(type: AIProviderType, aiSettings: any): string {
-    if (type === 'claude') {
-      return 'claude-3-5-haiku-20241022';
-    }
-
     if (type === 'openai') {
       return 'gpt-4o-mini';
+    }
+
+    if (type === 'gemini') {
+      return 'gemini-1.5-flash';
+    }
+
+    /* DEPRECATED - Not approved by Reddit Devvit policy
+    if (type === 'claude') {
+      return 'claude-3-5-haiku-20241022';
     }
 
     if (type === 'openai-compatible') {
       return aiSettings.openaiCompatibleModel || 'custom-model';
     }
+    */
 
     return 'unknown';
   }
 
   private async getProvider(type: AIProviderType, aiSettings: any): Promise<IAIProvider> {
-    if (type === 'claude') {
-      if (!aiSettings.claudeApiKey) {
-        throw new Error('Claude API key not configured');
-      }
-      return new ClaudeProvider(aiSettings.claudeApiKey);
-    }
-
     if (type === 'openai') {
       if (!aiSettings.openaiApiKey) {
         throw new Error('OpenAI API key not configured');
       }
       return new OpenAIProvider(aiSettings.openaiApiKey);
+    }
+
+    if (type === 'gemini') {
+      if (!aiSettings.geminiApiKey) {
+        throw new Error('Gemini API key not configured');
+      }
+      return new GeminiProvider(aiSettings.geminiApiKey);
+    }
+
+    /* DEPRECATED - Not approved by Reddit Devvit policy
+    if (type === 'claude') {
+      if (!aiSettings.claudeApiKey) {
+        throw new Error('Claude API key not configured');
+      }
+      return new ClaudeProvider(aiSettings.claudeApiKey);
     }
 
     if (type === 'openai-compatible') {
@@ -1201,6 +1216,7 @@ export class AIAnalyzer {
         model: aiSettings.openaiCompatibleModel,
       });
     }
+    */
 
     throw new Error(`Unknown provider type: ${type}`);
   }

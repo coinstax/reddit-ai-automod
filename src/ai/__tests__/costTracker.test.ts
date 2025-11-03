@@ -202,7 +202,7 @@ describe('CostTracker', () => {
     const createCostRecord = (overrides: Partial<CostRecord> = {}): CostRecord => ({
       id: 'test-' + Date.now(),
       timestamp: Date.now(),
-      provider: 'claude',
+      provider: 'openai',
       userId: 't2_testuser',
       tokensUsed: 1500,
       costUSD: 0.075,
@@ -211,7 +211,7 @@ describe('CostTracker', () => {
     });
 
     it('should record cost atomically using INCRBY (cents)', async () => {
-      const record = createCostRecord({ costUSD: 0.05, provider: 'claude' });
+      const record = createCostRecord({ costUSD: 0.05, provider: 'openai' });
       await costTracker.recordCost(record);
 
       const today = new Date().toISOString().split('T')[0];
@@ -219,28 +219,27 @@ describe('CostTracker', () => {
 
       // Verify increments were applied ($0.05 = 5 cents)
       expect(await mockRedis.get(`cost:daily:${today}`)).toBe('5');
-      expect(await mockRedis.get(`cost:daily:${today}:claude`)).toBe('5');
+      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('5');
       expect(await mockRedis.get(`cost:monthly:${month}`)).toBe('5');
     });
 
     it('should track per-provider costs separately', async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      await costTracker.recordCost(createCostRecord({ costUSD: 0.05, provider: 'claude' }));
+      await costTracker.recordCost(createCostRecord({ costUSD: 0.05, provider: 'openai' }));
       await costTracker.recordCost(createCostRecord({ costUSD: 0.1, provider: 'openai' }));
-      await costTracker.recordCost(createCostRecord({ costUSD: 0.02, provider: 'openai-compatible' }));
+      await costTracker.recordCost(createCostRecord({ costUSD: 0.02, provider: 'gemini' }));
 
       // $0.05 = 5 cents, $0.10 = 10 cents, $0.02 = 2 cents, total = 17 cents
-      expect(await mockRedis.get(`cost:daily:${today}:claude`)).toBe('5');
-      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('10');
-      expect(await mockRedis.get(`cost:daily:${today}:openai-compatible`)).toBe('2');
+      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('15');
+      expect(await mockRedis.get(`cost:daily:${today}:gemini`)).toBe('2');
       expect(await mockRedis.get(`cost:daily:${today}`)).toBe('17');
     });
 
     it('should handle concurrent cost recording without race conditions', async () => {
       // Simulate 10 concurrent API calls recording costs
       const promises = Array.from({ length: 10 }, () =>
-        costTracker.recordCost(createCostRecord({ costUSD: 0.05, provider: 'claude' }))
+        costTracker.recordCost(createCostRecord({ costUSD: 0.05, provider: 'openai' }))
       );
 
       await Promise.all(promises);
@@ -280,9 +279,8 @@ describe('CostTracker', () => {
       expect(status.monthlySpent).toBe(0);
       expect(status.alertLevel).toBe('NONE');
       expect(status.perProviderSpent).toEqual({
-        claude: 0,
         openai: 0,
-        'openai-compatible': 0,
+        gemini: 0,
       });
     });
 
@@ -292,8 +290,8 @@ describe('CostTracker', () => {
 
       // Set values in cents: $2.50 = 250, $2.00 = 200, $0.50 = 50, $15.75 = 1575
       await mockRedis.set(`cost:daily:${today}`, '250');
-      await mockRedis.set(`cost:daily:${today}:claude`, '200');
-      await mockRedis.set(`cost:daily:${today}:openai`, '50');
+      await mockRedis.set(`cost:daily:${today}:openai`, '200');
+      await mockRedis.set(`cost:daily:${today}:gemini`, '50');
       await mockRedis.set(`cost:monthly:${month}`, '1575');
 
       const status = await costTracker.getBudgetStatus();
@@ -301,9 +299,8 @@ describe('CostTracker', () => {
       expect(status.dailySpent).toBe(2.5);
       expect(status.dailyRemaining).toBe(2.5);
       expect(status.monthlySpent).toBe(15.75);
-      expect(status.perProviderSpent.claude).toBe(2.0);
-      expect(status.perProviderSpent.openai).toBe(0.5);
-      expect(status.perProviderSpent['openai-compatible']).toBe(0);
+      expect(status.perProviderSpent.openai).toBe(2.0);
+      expect(status.perProviderSpent.gemini).toBe(0.5);
     });
 
     it('should calculate alert level NONE for low spending', async () => {
@@ -352,9 +349,8 @@ describe('CostTracker', () => {
       expect(status.dailySpent).toBe(0);
       expect(status.monthlySpent).toBe(0);
       expect(status.perProviderSpent).toEqual({
-        claude: 0,
         openai: 0,
-        'openai-compatible': 0,
+        gemini: 0,
       });
     });
   });
@@ -366,8 +362,8 @@ describe('CostTracker', () => {
 
       // Set yesterday's spending in cents: $4.50 = 450, $3.00 = 300, $1.50 = 150
       await mockRedis.set(`cost:daily:${yesterday}`, '450');
-      await mockRedis.set(`cost:daily:${yesterday}:claude`, '300');
-      await mockRedis.set(`cost:daily:${yesterday}:openai`, '150');
+      await mockRedis.set(`cost:daily:${yesterday}:openai`, '300');
+      await mockRedis.set(`cost:daily:${yesterday}:gemini`, '150');
 
       // Reset budget
       await costTracker.resetDailyBudget();
@@ -377,14 +373,13 @@ describe('CostTracker', () => {
 
       // Yesterday's keys should be deleted
       expect(await mockRedis.get(`cost:daily:${yesterday}`)).toBeUndefined();
-      expect(await mockRedis.get(`cost:daily:${yesterday}:claude`)).toBeUndefined();
       expect(await mockRedis.get(`cost:daily:${yesterday}:openai`)).toBeUndefined();
+      expect(await mockRedis.get(`cost:daily:${yesterday}:gemini`)).toBeUndefined();
 
       // Today's keys should be initialized to '0'
       expect(await mockRedis.get(`cost:daily:${today}`)).toBe('0');
-      expect(await mockRedis.get(`cost:daily:${today}:claude`)).toBe('0');
       expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('0');
-      expect(await mockRedis.get(`cost:daily:${today}:deepseek`)).toBe('0');
+      expect(await mockRedis.get(`cost:daily:${today}:gemini`)).toBe('0');
     });
 
     it('should preserve existing today spending when resetting', async () => {
@@ -392,13 +387,13 @@ describe('CostTracker', () => {
 
       // Set some today spending (e.g., from late-night activity): $1.25 = 125 cents
       await mockRedis.set(`cost:daily:${today}`, '125');
-      await mockRedis.set(`cost:daily:${today}:claude`, '125');
+      await mockRedis.set(`cost:daily:${today}:openai`, '125');
 
       await costTracker.resetDailyBudget();
 
       // Today's spending should remain (get/set pattern doesn't overwrite existing)
       expect(await mockRedis.get(`cost:daily:${today}`)).toBe('125');
-      expect(await mockRedis.get(`cost:daily:${today}:claude`)).toBe('125');
+      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('125');
     });
 
     it('should log successful budget reset', async () => {
@@ -413,8 +408,8 @@ describe('CostTracker', () => {
 
       // Set spending for today in cents: $2.50 = 250, $2.00 = 200, $0.50 = 50
       await mockRedis.set(`cost:daily:${today}`, '250');
-      await mockRedis.set(`cost:daily:${today}:claude`, '200');
-      await mockRedis.set(`cost:daily:${today}:openai`, '50');
+      await mockRedis.set(`cost:daily:${today}:openai`, '200');
+      await mockRedis.set(`cost:daily:${today}:gemini`, '50');
 
       const report = await costTracker.getSpendingReport(1);
 
@@ -423,8 +418,8 @@ describe('CostTracker', () => {
       expect(report.totalSpent).toBe(2.5);
       expect(report.dailySpending).toHaveLength(1);
       expect(report.dailySpending[0].totalUSD).toBe(2.5);
-      expect(report.dailySpending[0].perProvider.claude).toBe(2.0);
-      expect(report.dailySpending[0].perProvider.openai).toBe(0.5);
+      expect(report.dailySpending[0].perProvider.openai).toBe(2.0);
+      expect(report.dailySpending[0].perProvider.gemini).toBe(0.5);
     });
 
     it('should generate multi-day spending report', async () => {
@@ -448,27 +443,22 @@ describe('CostTracker', () => {
     it('should calculate provider breakdown correctly', async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      // Set values in cents: $3.00 = 300, $2.00 = 200, $0.80 = 80, $0.20 = 20
+      // Set values in cents: $3.00 = 300, $2.00 = 200, $1.00 = 100
       await mockRedis.set(`cost:daily:${today}`, '300');
-      await mockRedis.set(`cost:daily:${today}:claude`, '200');
-      await mockRedis.set(`cost:daily:${today}:openai`, '80');
-      await mockRedis.set(`cost:daily:${today}:deepseek`, '20');
+      await mockRedis.set(`cost:daily:${today}:openai`, '200');
+      await mockRedis.set(`cost:daily:${today}:gemini`, '100');
 
       const report = await costTracker.getSpendingReport(1);
 
-      const claudeBreakdown = report.providerBreakdown.find(
-        (p: { provider: string }) => p.provider === 'claude'
-      );
       const openaiBreakdown = report.providerBreakdown.find(
         (p: { provider: string }) => p.provider === 'openai'
       );
-      const deepseekBreakdown = report.providerBreakdown.find(
-        (p: { provider: string }) => p.provider === 'deepseek'
+      const geminiBreakdown = report.providerBreakdown.find(
+        (p: { provider: string }) => p.provider === 'gemini'
       );
 
-      expect(claudeBreakdown?.totalUSD).toBe(2.0);
-      expect(openaiBreakdown?.totalUSD).toBe(0.8);
-      expect(deepseekBreakdown?.totalUSD).toBe(0.2);
+      expect(openaiBreakdown?.totalUSD).toBe(2.0);
+      expect(geminiBreakdown?.totalUSD).toBe(1.0);
     });
 
     it('should limit report to 90 days maximum', async () => {
@@ -491,7 +481,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost({
         id: 'test-alert-50',
         timestamp: Date.now(),
-        provider: 'claude',
+        provider: 'openai',
         userId: 't2_test',
         tokensUsed: 5000,
         costUSD: 2.5,
@@ -506,7 +496,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost({
         id: 'test-alert-75',
         timestamp: Date.now(),
-        provider: 'claude',
+        provider: 'openai',
         userId: 't2_test',
         tokensUsed: 7500,
         costUSD: 3.75,
@@ -521,7 +511,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost({
         id: 'test-alert-90',
         timestamp: Date.now(),
-        provider: 'claude',
+        provider: 'openai',
         userId: 't2_test',
         tokensUsed: 9000,
         costUSD: 4.5,
@@ -538,7 +528,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost({
         id: 'test-alert-exceeded',
         timestamp: Date.now(),
-        provider: 'claude',
+        provider: 'openai',
         userId: 't2_test',
         tokensUsed: 11000,
         costUSD: 5.5,
@@ -555,7 +545,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost({
         id: 'test-no-alert',
         timestamp: Date.now(),
-        provider: 'claude',
+        provider: 'openai',
         userId: 't2_test',
         tokensUsed: 2000,
         costUSD: 1.0,
@@ -573,7 +563,7 @@ describe('CostTracker', () => {
       const record = {
         id: 'test-1',
         timestamp: Date.now(),
-        provider: 'claude' as const,
+        provider: 'openai' as const,
         userId: 't2_test',
         tokensUsed: 1000,
         costUSD: 1.5,
@@ -600,7 +590,7 @@ describe('CostTracker', () => {
       const record = {
         id: 'test-small',
         timestamp: Date.now(),
-        provider: 'openai-compatible' as const,
+        provider: 'gemini' as const,
         userId: 't2_test',
         tokensUsed: 100,
         costUSD: 0.001, // Will round to 0 cents
@@ -619,7 +609,7 @@ describe('CostTracker', () => {
       const record = {
         id: 'test-cached',
         timestamp: Date.now(),
-        provider: 'claude' as const,
+        provider: 'openai' as const,
         userId: 't2_test',
         tokensUsed: 0,
         costUSD: 0,

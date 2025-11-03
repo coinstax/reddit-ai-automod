@@ -86,7 +86,8 @@ function createMockAnalysisResult(userId: string): AIAnalysisResult {
   return {
     userId,
     timestamp: Date.now(),
-    provider: 'claude',
+    provider: 'openai',
+    model: 'gpt-4o-mini',
     correlationId: 'test-correlation-id',
     promptVersion: 'v1.0',
     cacheTTL: 3600,

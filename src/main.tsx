@@ -27,20 +27,27 @@ import { getAnalysisHistory } from './storage/analysisHistory.js';
 import { sendDailyDigest } from './notifications/modmailDigest';
 
 // Configure Devvit with required permissions
-// Full configuration restored to test if devvit.json was causing trigger issues
+// Reddit Devvit Policy: Only OpenAI and Gemini LLMs are approved
+// https://developers.reddit.com/docs/devvit_rules#only-use-approved-llms
 Devvit.configure({
   redditAPI: true, // Access Reddit API
   redis: true,     // Use Redis storage
   http: {
     // HTTP enabled for AI API calls (Phase 2+)
+    // Only Reddit-approved LLM providers
     fetch: {
       allowList: [
-        'api.anthropic.com',
-        'api.openai.com',
-        'api.z.ai',
-        'api.x.ai',
-        'api.groq.com',
+        'api.openai.com',                      // OpenAI (approved)
+        'generativelanguage.googleapis.com',   // Google Gemini (approved)
       ],
+      /* DEPRECATED - Not approved by Reddit Devvit policy (as of 2025-11-03)
+      allowList: [
+        'api.anthropic.com',  // Claude (not approved)
+        'api.z.ai',          // Z.AI (not approved)
+        'api.x.ai',          // X.AI/Grok (not approved)
+        'api.groq.com',      // Groq (not approved)
+      ],
+      */
     },
   },
 });
@@ -207,34 +214,25 @@ Devvit.addSettings([
     type: 'select',
     name: 'primaryProvider',
     label: '🔑 Primary AI Provider',
-    helpText: 'Which AI provider to use first for Layer 3 custom rules (configure API key below)',
+    helpText: 'Which AI provider to use first for Layer 3 custom rules (configure API key below). Reddit only approves OpenAI and Gemini.',
     options: [
-      { label: 'Claude 3.5 Haiku (Anthropic)', value: 'claude' },
       { label: 'GPT-4o Mini (OpenAI)', value: 'openai' },
-      { label: 'OpenAI Compatible (Custom)', value: 'openai-compatible' },
+      { label: 'Gemini 1.5 Flash (Google)', value: 'gemini' },
     ],
-    defaultValue: 'claude',
+    defaultValue: 'openai',
     scope: 'installation',
   },
   {
     type: 'select',
     name: 'fallbackProvider',
     label: '🔑 Fallback AI Provider',
-    helpText: 'Which provider to use if primary fails (or "None" to disable fallback)',
+    helpText: 'Which provider to use if primary fails (or "None" to disable fallback). Reddit only approves OpenAI and Gemini.',
     options: [
+      { label: 'Gemini 1.5 Flash (Google)', value: 'gemini' },
       { label: 'GPT-4o Mini (OpenAI)', value: 'openai' },
-      { label: 'Claude 3.5 Haiku (Anthropic)', value: 'claude' },
-      { label: 'OpenAI Compatible (Custom)', value: 'openai-compatible' },
       { label: 'None (no fallback)', value: 'none' },
     ],
-    defaultValue: 'openai',
-    scope: 'installation',
-  },
-  {
-    type: 'string',
-    name: 'claudeApiKey',
-    label: '🔑 Claude API Key (Anthropic)',
-    helpText: 'Your Anthropic API key for Claude 3.5 Haiku. Get one at console.anthropic.com. Only needed if using Layer 3 custom AI rules.',
+    defaultValue: 'gemini',
     scope: 'installation',
   },
   {
@@ -242,6 +240,22 @@ Devvit.addSettings([
     name: 'openaiApiKey',
     label: '🔑 OpenAI API Key',
     helpText: 'Your OpenAI API key for GPT-4o Mini. Get one at platform.openai.com. Only needed if using Layer 3 custom AI rules.',
+    scope: 'installation',
+  },
+  {
+    type: 'string',
+    name: 'geminiApiKey',
+    label: '🔑 Gemini API Key (Google)',
+    helpText: 'Your Google AI Studio API key for Gemini 1.5 Flash. Get one at aistudio.google.com/apikey. Only needed if using Layer 3 custom AI rules.',
+    scope: 'installation',
+  },
+
+  /* DEPRECATED - Not approved by Reddit Devvit policy (as of 2025-11-03)
+  {
+    type: 'string',
+    name: 'claudeApiKey',
+    label: '🔑 Claude API Key (Anthropic)',
+    helpText: 'Your Anthropic API key for Claude 3.5 Haiku. Get one at console.anthropic.com. Only needed if using Layer 3 custom AI rules.',
     scope: 'installation',
   },
   {
@@ -265,6 +279,7 @@ Devvit.addSettings([
     helpText: 'Model to use at the custom endpoint. Examples: llama-3.1-70b-versatile (Groq), meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo (Together AI), meta-llama/Llama-3.1-8B-Instruct (vLLM)',
     scope: 'installation',
   },
+  */
   {
     type: 'number',
     name: 'dailyBudgetLimit',
