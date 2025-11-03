@@ -117,31 +117,15 @@ export class ConfigurationManager {
 
       // Merge provider configurations
       providers: {
-        claude: {
-          ...AI_CONFIG.providers.claude,
-          // Add API key if configured in settings
-          ...(aiProviderConfig.claudeApiKey && { apiKey: aiProviderConfig.claudeApiKey }),
-        },
         openai: {
           ...AI_CONFIG.providers.openai,
           // Add API key if configured in settings
           ...(aiProviderConfig.openaiApiKey && { apiKey: aiProviderConfig.openaiApiKey }),
         },
-        'openai-compatible': {
-          type: 'openai-compatible' as const,
-          model: aiProviderConfig.openaiCompatibleModel || 'gpt-4o-mini',
-          // IMPORTANT: Only enabled if explicitly selected as primary or fallback provider
-          // Having API key/URL filled does NOT automatically enable it
-          enabled: (
-            aiProviderConfig.primaryProvider === 'openai-compatible' ||
-            aiProviderConfig.fallbackProvider === 'openai-compatible'
-          ),
-          priority: 4, // Last resort fallback
-          costPerMTokenInput: 0.15, // Use OpenAI default costs (can be overridden)
-          costPerMTokenOutput: 0.6,
-          baseUrl: aiProviderConfig.openaiCompatibleBaseURL || '',
+        gemini: {
+          ...AI_CONFIG.providers.gemini,
           // Add API key if configured in settings
-          ...(aiProviderConfig.openaiCompatibleApiKey && { apiKey: aiProviderConfig.openaiCompatibleApiKey }),
+          ...(aiProviderConfig.geminiApiKey && { apiKey: aiProviderConfig.geminiApiKey }),
         },
       },
 

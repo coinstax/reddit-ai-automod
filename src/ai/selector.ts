@@ -55,14 +55,15 @@
 
 import { Devvit } from '@devvit/public-api';
 import { IAIProvider } from './provider.js';
-import { ClaudeProvider } from './claude.js';
+// import { ClaudeProvider } from './claude.js'; // DEPRECATED: Not approved by Reddit
 import { OpenAIProvider } from './openai.js';
-import { OpenAICompatibleProvider } from './openaiCompatible.js';
+// import { OpenAICompatibleProvider } from './openaiCompatible.js'; // DEPRECATED: Not approved by Reddit
 import { CircuitBreaker } from './circuitBreaker.js';
 import { AIProviderType, ProviderHealthStatus } from '../types/ai.js';
 import { AI_CONFIG, getEnabledProviders } from '../config/ai.js';
 import { ConfigurationManager } from '../config/configManager.js';
 import { SettingsService } from '../config/settingsService.js';
+import { GeminiProvider } from './gemini.js';
 
 /**
  * Provider Selector - Intelligent AI provider selection with automatic failover
@@ -213,14 +214,6 @@ export class ProviderSelector {
    */
   private async createProvider(type: AIProviderType, aiSettings: any): Promise<IAIProvider | null> {
     try {
-      if (type === 'claude') {
-        if (!aiSettings.claudeApiKey) {
-          console.warn('[ProviderSelector] Claude API key not configured');
-          return null;
-        }
-        return new ClaudeProvider(aiSettings.claudeApiKey);
-      }
-
       if (type === 'openai') {
         if (!aiSettings.openaiApiKey) {
           console.warn('[ProviderSelector] OpenAI API key not configured');
@@ -229,16 +222,12 @@ export class ProviderSelector {
         return new OpenAIProvider(aiSettings.openaiApiKey);
       }
 
-      if (type === 'openai-compatible') {
-        if (!aiSettings.openaiCompatibleApiKey || !aiSettings.openaiCompatibleBaseURL || !aiSettings.openaiCompatibleModel) {
-          console.warn('[ProviderSelector] OpenAI Compatible not fully configured');
+      if (type === 'gemini') {
+        if (!aiSettings.geminiApiKey) {
+          console.warn('[ProviderSelector] Gemini API key not configured');
           return null;
         }
-        return new OpenAICompatibleProvider({
-          apiKey: aiSettings.openaiCompatibleApiKey,
-          baseURL: aiSettings.openaiCompatibleBaseURL,
-          model: aiSettings.openaiCompatibleModel,
-        });
+        return new GeminiProvider(aiSettings.geminiApiKey);
       }
 
       console.warn('[ProviderSelector] Unknown provider type:', type);
@@ -295,35 +284,8 @@ export class ProviderSelector {
       }
     }
 
-    // All standard providers unavailable, try OpenAI Compatible as fallback
-    console.log('[ProviderSelector] All standard providers unavailable, checking OpenAI Compatible');
-    const aiSettings = await SettingsService.getAIConfig(this.context);
-    if (aiSettings.openaiCompatibleApiKey && aiSettings.openaiCompatibleBaseURL && aiSettings.openaiCompatibleModel) {
-      try {
-        const provider = new OpenAICompatibleProvider({
-          apiKey: aiSettings.openaiCompatibleApiKey,
-          baseURL: aiSettings.openaiCompatibleBaseURL,
-          model: aiSettings.openaiCompatibleModel,
-        });
-
-        // Do a quick health check
-        const healthy = await provider.healthCheck();
-        if (healthy) {
-          console.log('[ProviderSelector] Selected OpenAI Compatible provider', {
-            baseURL: aiSettings.openaiCompatibleBaseURL,
-            model: aiSettings.openaiCompatibleModel,
-          });
-          return provider;
-        } else {
-          console.warn('[ProviderSelector] OpenAI Compatible provider unhealthy');
-        }
-      } catch (error) {
-        console.error('[ProviderSelector] Error with OpenAI Compatible provider:', error);
-      }
-    }
-
     // All providers unavailable
-    console.error('[ProviderSelector] All providers unavailable (including OpenAI Compatible)');
+    console.error('[ProviderSelector] All providers unavailable');
     return null;
   }
 
@@ -534,21 +496,7 @@ export class ProviderSelector {
    * ```
    */
   private async getProviderInstance(type: AIProviderType): Promise<IAIProvider> {
-    // Handle OpenAI Compatible separately
-    if (type === 'openai-compatible') {
-      const aiSettings = await SettingsService.getAIConfig(this.context);
-      if (!aiSettings.openaiCompatibleApiKey || !aiSettings.openaiCompatibleBaseURL || !aiSettings.openaiCompatibleModel) {
-        console.warn('[ProviderSelector] OpenAI Compatible provider not fully configured');
-        throw new Error('OpenAI Compatible provider requires apiKey, baseURL, and model. Please configure in Devvit settings.');
-      }
-      return new OpenAICompatibleProvider({
-        apiKey: aiSettings.openaiCompatibleApiKey,
-        baseURL: aiSettings.openaiCompatibleBaseURL,
-        model: aiSettings.openaiCompatibleModel,
-      });
-    }
-
-    // Get effective config with settings-based API keys for standard providers
+    // Get effective config with settings-based API keys
     const config = await ConfigurationManager.getEffectiveAIConfig(this.context);
     const providerConfig = config.providers[type];
 
@@ -559,12 +507,12 @@ export class ProviderSelector {
     }
 
     // Create provider instance with settings-based API key
-    // Note: Models are hardcoded in provider classes (claude-3-5-haiku, gpt-4o-mini)
+    // Note: Models are hardcoded in provider classes (gpt-4o-mini, gemini-1.5-flash)
     switch (type) {
-      case 'claude':
-        return new ClaudeProvider(providerConfig.apiKey);
       case 'openai':
         return new OpenAIProvider(providerConfig.apiKey);
+      case 'gemini':
+        return new GeminiProvider(providerConfig.apiKey);
       default:
         throw new Error(`Unknown provider type: ${type}`);
     }

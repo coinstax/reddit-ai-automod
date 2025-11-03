@@ -86,11 +86,15 @@ export enum DegradationLevel {
 }
 
 /**
- * Configuration for a single AI provider
+ * Configuration for a single AI provider (per-provider settings)
  * Defines model, priority, and enable/disable status
  * Note: API keys are stored separately in Devvit Settings (added at runtime)
+ *
+ * NOTE: This is different from types/config.ts AIProviderConfig which is
+ * the settings-based configuration. This interface is for the AI_CONFIG
+ * constants in config/ai.ts.
  */
-export interface AIProviderConfig {
+export interface AIProviderSettings {
   /** Provider type identifier */
   type: AIProviderType;
   /** Model name/ID to use for this provider */
@@ -443,7 +447,7 @@ export interface RetryConfig {
  */
 export interface AIConfig {
   /** Provider-specific configurations */
-  providers: Record<AIProviderType, AIProviderConfig>;
+  providers: Record<AIProviderType, AIProviderSettings>;
   /** Budget limits and alert thresholds */
   budget: {
     /** Daily spending limit in USD */

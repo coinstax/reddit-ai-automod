@@ -303,12 +303,10 @@ export class CostDashboardCache {
 
       // Extract provider cost from budget status
       switch (provider) {
-        case 'claude':
-          return status.perProviderSpent.claude;
         case 'openai':
           return status.perProviderSpent.openai;
-        case 'openai-compatible':
-          return status.perProviderSpent['openai-compatible'];
+        case 'gemini':
+          return status.perProviderSpent.gemini;
         default:
           return 0;
       }
@@ -342,12 +340,10 @@ export class CostDashboardCache {
       const status = await costTracker.getBudgetStatus();
 
       switch (provider) {
-        case 'claude':
-          return status.perProviderSpent.claude;
         case 'openai':
           return status.perProviderSpent.openai;
-        case 'openai-compatible':
-          return status.perProviderSpent['openai-compatible'];
+        case 'gemini':
+          return status.perProviderSpent.gemini;
         default:
           return 0;
       }

@@ -70,7 +70,6 @@ export class OpenAIProvider implements IAIProvider {
 
   private client: OpenAI;
   private config = AI_CONFIG.providers.openai;
-  private retryConfig = AI_CONFIG.retry;
 
   /**
    * Create OpenAI provider instance
@@ -342,6 +341,7 @@ export class OpenAIProvider implements IAIProvider {
         userId: request.userId,
         timestamp: Date.now(),
         provider: this.type,
+        model: this.model,
         correlationId,
         cacheTTL,
         tokensUsed: inputTokens + outputTokens,
@@ -457,27 +457,6 @@ export class OpenAIProvider implements IAIProvider {
     return AIErrorType.PROVIDER_ERROR;
   }
 
-  /**
-   * Calculate exponential backoff delay
-   *
-   * @param attempt - Current attempt number (1-indexed)
-   * @returns Delay in milliseconds
-   * @private
-   */
-  private calculateBackoff(attempt: number): number {
-    const delay =
-      this.retryConfig.initialDelayMs *
-      Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
-    return Math.min(delay, this.retryConfig.maxDelayMs);
-  }
-
-  /**
-   * Sleep for specified milliseconds
-   *
-   * @param ms - Milliseconds to sleep
-   * @private
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  // Note: calculateBackoff and sleep methods removed as they're no longer used
+  // Retry logic is now handled by analyzer.ts
 }

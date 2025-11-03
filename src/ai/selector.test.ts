@@ -166,17 +166,16 @@ async function runTests() {
   );
 
   // Test 3: Select provider with all healthy
-  await runTest('Should select Claude first (priority 1)', async () => {
+  await runTest('Should select OpenAI or Gemini provider', async () => {
     const context = createMockContext();
     const selector = ProviderSelector.getInstance(context);
 
     const provider = await selector.selectProvider();
 
     assertNotNull(provider, 'Should select a provider');
-    assertEquals(
-      provider?.type,
-      'claude',
-      'Should select Claude (highest priority)'
+    assert(
+      provider?.type === 'openai' || provider?.type === 'gemini',
+      'Should select OpenAI or Gemini provider'
     );
 
     // Clean up
@@ -191,25 +190,24 @@ async function runTests() {
     const healthStatus = await selector.checkAllProviders();
 
     assertNotNull(healthStatus, 'Should return health status');
-    assertNotNull(healthStatus.claude, 'Should have Claude status');
     assertNotNull(healthStatus.openai, 'Should have OpenAI status');
-    assertNotNull(healthStatus['openai-compatible'], 'Should have OpenAI Compatible status');
+    assertNotNull(healthStatus.gemini, 'Should have Gemini status');
 
     // Verify structure
     assert(
-      typeof healthStatus.claude.healthy === 'boolean',
+      typeof healthStatus.openai.healthy === 'boolean',
       'Should have healthy boolean'
     );
     assert(
-      typeof healthStatus.claude.lastCheckTime === 'number',
+      typeof healthStatus.openai.lastCheckTime === 'number',
       'Should have lastCheckTime'
     );
     assert(
-      ['CLOSED', 'OPEN', 'HALF_OPEN'].includes(healthStatus.claude.circuitState),
+      ['CLOSED', 'OPEN', 'HALF_OPEN'].includes(healthStatus.openai.circuitState),
       'Should have valid circuit state'
     );
     assert(
-      typeof healthStatus.claude.recentFailures === 'number',
+      typeof healthStatus.openai.recentFailures === 'number',
       'Should have recentFailures count'
     );
 
@@ -255,9 +253,8 @@ async function runTests() {
 
     // Should not throw
     selector.setABTestMode(true, {
-      claude: 40,
-      openai: 30,
-      'openai-compatible': 30,
+      openai: 50,
+      gemini: 50,
     });
 
     assert(true, 'A/B testing mode configured successfully');
@@ -282,9 +279,8 @@ async function runTests() {
       };
 
       selector.setABTestMode(true, {
-        claude: 50,
-        openai: 30,
-        'openai-compatible': 10, // Sums to 90, not 100
+        openai: 50,
+        gemini: 40, // Sums to 90, not 100
       });
 
       console.warn = originalWarn;
@@ -302,9 +298,8 @@ async function runTests() {
     const selector = ProviderSelector.getInstance(context);
 
     selector.setABTestMode(false, {
-      claude: 100,
-      openai: 0,
-      'openai-compatible': 0,
+      openai: 100,
+      gemini: 0,
     });
 
     // Should still use priority-based selection
@@ -394,23 +389,23 @@ async function runTests() {
 
     const healthStatus = await selector.checkAllProviders();
 
-    const claudeStatus = healthStatus.claude;
+    const openaiStatus = healthStatus.openai;
 
-    assertEquals(claudeStatus.provider, 'claude', 'Should have provider type');
+    assertEquals(openaiStatus.provider, 'openai', 'Should have provider type');
     assert(
-      typeof claudeStatus.healthy === 'boolean',
+      typeof openaiStatus.healthy === 'boolean',
       'Should have healthy boolean'
     );
     assert(
-      claudeStatus.lastCheckTime > 0,
+      openaiStatus.lastCheckTime > 0,
       'Should have valid lastCheckTime'
     );
     assert(
-      ['CLOSED', 'OPEN', 'HALF_OPEN'].includes(claudeStatus.circuitState),
+      ['CLOSED', 'OPEN', 'HALF_OPEN'].includes(openaiStatus.circuitState),
       'Should have valid circuit state'
     );
     assert(
-      typeof claudeStatus.recentFailures === 'number',
+      typeof openaiStatus.recentFailures === 'number',
       'Should have recentFailures number'
     );
 

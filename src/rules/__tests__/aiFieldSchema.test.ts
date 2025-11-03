@@ -176,9 +176,9 @@ describe('AI Field Schema Tests', () => {
         model: 'gpt-4o-mini',
         correlationId: 'test-correlation-id',
         cacheTTL: 3600,
-        tokensUsed: 500,
-        costUSD: 0.0001,
-        latencyMs: 1500,
+        tokensUsed: 300,
+        costUSD: 0.002,
+        latencyMs: 150,
         answers: [
           {
             questionId: 'dating_intent',
@@ -192,10 +192,7 @@ describe('AI Field Schema Tests', () => {
             confidence: 95,
             reasoning: 'Post looks legitimate'
           }
-        ],
-        tokensUsed: 300,
-        costUSD: 0.002,
-        latencyMs: 150
+        ]
       };
 
       mockContext = {

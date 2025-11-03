@@ -56,7 +56,6 @@ import {
   AIQuestionBatchResult,
 } from '../types/ai.js';
 import { aiResponseValidator } from './validator.js';
-import { AI_CONFIG } from '../config/ai.js';
 import { promptManager } from './prompts.js';
 import { getCacheTTLForTrustScore } from '../config/ai.js';
 
@@ -114,7 +113,6 @@ export class GeminiProvider implements IAIProvider {
 
   private apiKey: string;
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
-  private config = AI_CONFIG.providers.gemini;
 
   /**
    * Create Gemini provider instance

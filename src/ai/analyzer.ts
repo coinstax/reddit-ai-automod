@@ -665,7 +665,7 @@ export class AIAnalyzer {
       const primaryProvider = await this.getProvider(aiSettings.primaryProvider, aiSettings);
       result = await primaryProvider.analyze(request);
       usedProvider = aiSettings.primaryProvider;
-      usedModel = this.getModelName(aiSettings.primaryProvider, aiSettings);
+      usedModel = this.getModelName(aiSettings.primaryProvider);
       console.log('[AIAnalyzer] ✓ Primary provider succeeded:', aiSettings.primaryProvider);
     } catch (primaryError) {
       // Primary failed, try fallback
@@ -681,7 +681,7 @@ export class AIAnalyzer {
         const fallbackProvider = await this.getProvider(aiSettings.fallbackProvider, aiSettings);
         result = await fallbackProvider.analyze(request);
         usedProvider = aiSettings.fallbackProvider;
-        usedModel = this.getModelName(aiSettings.fallbackProvider, aiSettings);
+        usedModel = this.getModelName(aiSettings.fallbackProvider);
         console.log('[AIAnalyzer] ✓ Fallback provider succeeded:', aiSettings.fallbackProvider);
       } catch (fallbackError) {
         console.error('[AIAnalyzer] Fallback provider also failed:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
@@ -891,7 +891,7 @@ export class AIAnalyzer {
 
       result = await primaryProvider.analyzeWithQuestions(request);
       usedProvider = aiSettings.primaryProvider;
-      usedModel = this.getModelName(aiSettings.primaryProvider, aiSettings);
+      usedModel = this.getModelName(aiSettings.primaryProvider);
       console.log('[AIAnalyzer] ✓ Primary provider succeeded for questions:', aiSettings.primaryProvider);
     } catch (primaryError) {
       // Primary failed, try fallback
@@ -912,7 +912,7 @@ export class AIAnalyzer {
 
         result = await fallbackProvider.analyzeWithQuestions(request);
         usedProvider = aiSettings.fallbackProvider;
-        usedModel = this.getModelName(aiSettings.fallbackProvider, aiSettings);
+        usedModel = this.getModelName(aiSettings.fallbackProvider);
         console.log('[AIAnalyzer] ✓ Fallback provider succeeded for questions:', aiSettings.fallbackProvider);
       } catch (fallbackError) {
         console.error('[AIAnalyzer] Fallback provider also failed for questions:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
@@ -1161,7 +1161,7 @@ export class AIAnalyzer {
    * @returns Model name string
    * @private
    */
-  private getModelName(type: AIProviderType, aiSettings: any): string {
+  private getModelName(type: AIProviderType): string {
     if (type === 'openai') {
       return 'gpt-4o-mini';
     }
