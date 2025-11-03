@@ -714,4 +714,346 @@ describe('PromptManager', () => {
       expect(result.prompt).toContain('[SSN]');
     });
   });
+
+  describe('buildEnhancedQuestionPrompt', () => {
+    it('should build prompt with simple questions (backward compatibility)', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'simple_test',
+            question: 'Is this a test?',
+          },
+        ],
+      });
+
+      expect(result.prompt).toBeDefined();
+      expect(result.version).toBe('enhanced-questions');
+      expect(result.prompt).toContain('simple_test');
+      expect(result.prompt).toContain('Is this a test?');
+    });
+
+    it('should include confidence calibration section when provided', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            confidenceGuidance: {
+              lowConfidence: 'Discussing dating as a topic, not seeking dates',
+              mediumConfidence: 'Ambiguous language that could indicate interest',
+              highConfidence: 'Explicit solicitation with location and contact info',
+            },
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('CONFIDENCE CALIBRATION:');
+      expect(result.prompt).toContain('HIGH CONFIDENCE (70-100%):');
+      expect(result.prompt).toContain('Explicit solicitation with location and contact info');
+      expect(result.prompt).toContain('MEDIUM CONFIDENCE (30-69%):');
+      expect(result.prompt).toContain('Ambiguous language that could indicate interest');
+      expect(result.prompt).toContain('LOW CONFIDENCE (0-29%):');
+      expect(result.prompt).toContain('Discussing dating as a topic, not seeking dates');
+    });
+
+    it('should include analysis framework when provided', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            analysisFramework: {
+              evidenceTypes: ['DIRECT', 'IMPLIED', 'DISCUSSION', 'NEGATED'],
+              contextualFactors: ['subreddit culture', 'user post history'],
+            },
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('ANALYSIS FRAMEWORK:');
+      expect(result.prompt).toContain('Categorize each piece of evidence as:');
+      expect(result.prompt).toContain('DIRECT');
+      expect(result.prompt).toContain('IMPLIED');
+      expect(result.prompt).toContain('DISCUSSION');
+      expect(result.prompt).toContain('NEGATED');
+      expect(result.prompt).toContain('Consider these contextual factors:');
+      expect(result.prompt).toContain('subreddit culture');
+      expect(result.prompt).toContain('user post history');
+    });
+
+    it('should include false positive filters when provided', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            analysisFramework: {
+              falsePositiveFilters: [
+                'quoting or referencing rules',
+                'telling stories about past experiences',
+                'giving advice to others',
+              ],
+            },
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('FALSE POSITIVE FILTERS:');
+      expect(result.prompt).toContain('Before flagging content, check for these common false positive patterns:');
+      expect(result.prompt).toContain('quoting or referencing rules');
+      expect(result.prompt).toContain('telling stories about past experiences');
+      expect(result.prompt).toContain('giving advice to others');
+      expect(result.prompt).toContain('If ANY of these patterns are present, significantly reduce confidence or answer NO.');
+    });
+
+    it('should include negation detection when enabled', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            negationHandling: {
+              enabled: true,
+              patterns: ['not looking for {action}', "don't want {action}"],
+            },
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('NEGATION DETECTION:');
+      expect(result.prompt).toContain('Check carefully for negated statements');
+      expect(result.prompt).toContain('not looking for {action}');
+      expect(result.prompt).toContain("don't want {action}");
+    });
+
+    it('should include evidence requirements when provided', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            evidenceRequired: {
+              minPieces: 2,
+              types: ['DIRECT', 'IMPLIED'],
+              includeQuotes: true,
+              includePermalinks: true,
+            },
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('EVIDENCE REQUIREMENTS:');
+      expect(result.prompt).toContain('You must find at least 2 pieces of evidence before answering YES.');
+      expect(result.prompt).toContain('Required evidence types: DIRECT, IMPLIED');
+      expect(result.prompt).toContain('Include exact quotes from the content in your reasoning.');
+      expect(result.prompt).toContain('Reference specific posts/comments that contain evidence.');
+    });
+
+    it('should include few-shot examples when provided', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            examples: [
+              {
+                scenario: "User posts 'Why is dating banned here?'",
+                expectedAnswer: 'NO',
+                confidence: 10,
+                reasoning: 'User is discussing the dating ban, not seeking dates',
+              },
+              {
+                scenario: "User posts '45M seeking female friends. DM me!'",
+                expectedAnswer: 'YES',
+                confidence: 85,
+                reasoning: 'Gender preference + DM request suggests romantic intent',
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(result.prompt).toContain('EXAMPLES OF CORRECT ANALYSIS:');
+      expect(result.prompt).toContain('Example 1:');
+      expect(result.prompt).toContain("User posts 'Why is dating banned here?'");
+      expect(result.prompt).toContain('Expected Answer: NO');
+      expect(result.prompt).toContain('Expected Confidence: 10%');
+      expect(result.prompt).toContain('User is discussing the dating ban, not seeking dates');
+      expect(result.prompt).toContain('Example 2:');
+      expect(result.prompt).toContain("User posts '45M seeking female friends. DM me!'");
+      expect(result.prompt).toContain('Expected Answer: YES');
+      expect(result.prompt).toContain('Expected Confidence: 85%');
+      expect(result.prompt).toContain('Gender preference + DM request suggests romantic intent');
+    });
+
+    it('should build prompt with all enhanced features combined', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            context: 'This is a platonic friendship community for people aged 40+',
+            confidenceGuidance: {
+              lowConfidence: 'Discussing dating as a topic, not seeking dates',
+              mediumConfidence: 'Ambiguous language that could indicate interest',
+              highConfidence: 'Explicit solicitation with location and contact info',
+            },
+            analysisFramework: {
+              evidenceTypes: ['DIRECT', 'IMPLIED', 'DISCUSSION', 'NEGATED'],
+              falsePositiveFilters: [
+                'quoting or referencing rules',
+                'telling stories about past experiences',
+              ],
+              contextualFactors: ['subreddit culture', 'user post history'],
+            },
+            evidenceRequired: {
+              minPieces: 2,
+              types: ['DIRECT', 'IMPLIED'],
+              includeQuotes: true,
+            },
+            negationHandling: {
+              enabled: true,
+              patterns: ['not looking for {action}'],
+            },
+            examples: [
+              {
+                scenario: 'User discusses past dating',
+                expectedAnswer: 'NO',
+                confidence: 20,
+                reasoning: 'Sharing story, not seeking',
+              },
+            ],
+          },
+        ],
+      });
+
+      // Verify all sections are present
+      expect(result.prompt).toContain('high-precision content classifier');
+      expect(result.prompt).toContain('USER PROFILE:');
+      expect(result.prompt).toContain('DECISION FRAMEWORK:');
+      expect(result.prompt).toContain('QUESTION 1: dating_intent');
+      expect(result.prompt).toContain('ANALYSIS FRAMEWORK:');
+      expect(result.prompt).toContain('FALSE POSITIVE FILTERS:');
+      expect(result.prompt).toContain('NEGATION DETECTION:');
+      expect(result.prompt).toContain('CONFIDENCE CALIBRATION:');
+      expect(result.prompt).toContain('EVIDENCE REQUIREMENTS:');
+      expect(result.prompt).toContain('EXAMPLES OF CORRECT ANALYSIS:');
+      expect(result.prompt).toContain('YOUR TASK:');
+      expect(result.prompt).toContain('QUESTIONS:');
+      expect(result.prompt).toContain('RESPOND WITH JSON:');
+      expect(result.prompt).toContain('This is a platonic friendship community for people aged 40+');
+    });
+
+    it('should handle multiple questions with different enhancements', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Test',
+          body: 'Test content',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'dating_intent',
+            question: 'Is this user seeking romantic relationships?',
+            confidenceGuidance: {
+              highConfidence: 'Explicit solicitation',
+            },
+          },
+          {
+            id: 'age_appropriate',
+            question: 'Does this user appear to be over 40?',
+            analysisFramework: {
+              evidenceTypes: ['DIRECT', 'IMPLIED'],
+            },
+          },
+        ],
+      });
+
+      // Should have sections for both questions
+      expect(result.prompt).toContain('QUESTION 1: dating_intent');
+      expect(result.prompt).toContain('QUESTION 2: age_appropriate');
+      expect(result.prompt).toContain('dating_intent');
+      expect(result.prompt).toContain('age_appropriate');
+    });
+
+    it('should sanitize PII from content', async () => {
+      const result = await manager.buildEnhancedQuestionPrompt({
+        profile: mockProfile,
+        postHistory: mockPostHistory,
+        currentPost: {
+          title: 'Contact me',
+          body: 'Email me at test@example.com',
+          subreddit: 'FriendsOver40',
+        },
+        questions: [
+          {
+            id: 'test',
+            question: 'Is this a test?',
+          },
+        ],
+      });
+
+      expect(result.piiRemoved).toBe(1);
+      expect(result.prompt).toContain('[EMAIL]');
+      expect(result.prompt).not.toContain('test@example.com');
+    });
+  });
 });

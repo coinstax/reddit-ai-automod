@@ -557,6 +557,202 @@ export interface AIQuestion {
 }
 
 /**
+ * Confidence guidance for calibrating AI confidence scores
+ * Teaches AI what different confidence levels mean for a specific question
+ *
+ * @example
+ * ```typescript
+ * const guidance: ConfidenceGuidance = {
+ *   lowConfidence: "Discussing dating as a topic, not seeking dates",
+ *   mediumConfidence: "Ambiguous language that could indicate interest",
+ *   highConfidence: "Explicit solicitation with location and contact info"
+ * };
+ * ```
+ */
+export interface ConfidenceGuidance {
+  /** What low confidence (<30%) means for this question */
+  lowConfidence?: string;
+  /** What medium confidence (30-69%) means for this question */
+  mediumConfidence?: string;
+  /** What high confidence (70-100%) means for this question */
+  highConfidence?: string;
+}
+
+/**
+ * Analysis framework for categorizing evidence
+ * Guides AI on how to classify and weigh different types of evidence
+ *
+ * @example
+ * ```typescript
+ * const framework: AnalysisFramework = {
+ *   evidenceTypes: ["DIRECT", "IMPLIED", "CONTEXTUAL", "DISCUSSION", "NEGATED"],
+ *   falsePositiveFilters: [
+ *     "quoting or referencing rules",
+ *     "telling stories about past experiences",
+ *     "giving advice to others"
+ *   ]
+ * };
+ * ```
+ */
+export interface AnalysisFramework {
+  /** Types of evidence to look for and categorize */
+  evidenceTypes?: string[];
+  /** Common false positive patterns to filter out */
+  falsePositiveFilters?: string[];
+  /** Contextual factors to consider when making decisions */
+  contextualFactors?: string[];
+}
+
+/**
+ * Evidence requirements for flagging content
+ * Enforces minimum evidence standards before taking action
+ *
+ * @example
+ * ```typescript
+ * const requirements: EvidenceRequired = {
+ *   minPieces: 2,
+ *   types: ["DIRECT", "IMPLIED"],
+ *   includeQuotes: true
+ * };
+ * ```
+ */
+export interface EvidenceRequired {
+  /** Minimum number of pieces of evidence required */
+  minPieces?: number;
+  /** Types of evidence required (at least one must be present) */
+  types?: string[];
+  /** Whether to extract exact quotes from content */
+  includeQuotes?: boolean;
+  /** Whether to include permalinks to evidence */
+  includePermalinks?: boolean;
+}
+
+/**
+ * Negation handling configuration
+ * Detects "NOT doing X" statements to reduce false positives
+ *
+ * @example
+ * ```typescript
+ * const negation: NegationHandling = {
+ *   enabled: true,
+ *   patterns: [
+ *     "not looking for {action}",
+ *     "don't want {action}"
+ *   ]
+ * };
+ * ```
+ */
+export interface NegationHandling {
+  /** Enable negation detection */
+  enabled: boolean;
+  /** Custom negation patterns to detect */
+  patterns?: string[];
+}
+
+/**
+ * Enhanced AI Question with structured guidance for reducing false positives
+ *
+ * Backward Compatible: Simple AIQuestion objects still work
+ * Enhanced: Provides AI with structured guidance through optional fields
+ *
+ * @example
+ * ```typescript
+ * // Simple usage (backward compatible)
+ * const simple: EnhancedAIQuestion = {
+ *   id: "spam_check",
+ *   question: "Is this spam?"
+ * };
+ *
+ * // Enhanced usage with confidence calibration
+ * const enhanced: EnhancedAIQuestion = {
+ *   id: "dating_intent",
+ *   question: "Is this user seeking romantic relationships?",
+ *   confidenceGuidance: {
+ *     lowConfidence: "Discussing dating as a topic, not seeking dates",
+ *     mediumConfidence: "Ambiguous language that could indicate interest",
+ *     highConfidence: "Explicit solicitation with location and contact info"
+ *   },
+ *   analysisFramework: {
+ *     evidenceTypes: ["DIRECT", "IMPLIED", "DISCUSSION", "NEGATED"],
+ *     falsePositiveFilters: [
+ *       "quoting or referencing rules",
+ *       "telling stories about past experiences"
+ *     ]
+ *   }
+ * };
+ * ```
+ */
+export interface EnhancedAIQuestion {
+  /**
+   * Unique question identifier
+   *
+   * **Format Rules**:
+   * - Use lowercase snake_case (e.g., "dating_intent_check")
+   * - Alphanumeric characters and underscores only (no spaces, commas, or special characters)
+   * - Must be unique within a question batch
+   * - Max length: 50 characters recommended
+   *
+   * @example "dating_intent"
+   * @example "age_appropriate_for_sub"
+   */
+  id: string;
+
+  /**
+   * Natural language question to ask the AI
+   * Should be clear, specific, and binary (answerable with YES/NO)
+   *
+   * @example "Is this user seeking romantic or sexual relationships?"
+   * @example "Does this post contain spam or promotional content?"
+   */
+  question: string;
+
+  /**
+   * Optional additional context specific to this question
+   * Supplements the question with background information
+   */
+  context?: string;
+
+  /**
+   * Analysis Framework: Guides HOW to classify evidence
+   * Reduces false positives by teaching AI what counts as evidence
+   */
+  analysisFramework?: AnalysisFramework;
+
+  /**
+   * Confidence Guidance: Calibrates confidence scores
+   * Teaches AI what different confidence levels mean
+   */
+  confidenceGuidance?: ConfidenceGuidance;
+
+  /**
+   * Evidence Requirements: What proof is needed
+   * Enforces minimum evidence standards
+   */
+  evidenceRequired?: EvidenceRequired;
+
+  /**
+   * Negation Handling: Detect "NOT doing X" statements
+   * Critical for reducing false positives
+   */
+  negationHandling?: NegationHandling;
+
+  /**
+   * Few-Shot Examples: Train AI with examples
+   * Shows AI what to look for and what to ignore
+   */
+  examples?: Array<{
+    /** Example scenario description */
+    scenario: string;
+    /** Expected answer for this scenario */
+    expectedAnswer: 'YES' | 'NO';
+    /** Expected confidence score (0-100) */
+    confidence: number;
+    /** Explanation of why this answer is correct */
+    reasoning: string;
+  }>;
+}
+
+/**
  * AI answer to a custom question
  * Contains YES/NO answer with confidence score and reasoning
  */
