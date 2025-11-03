@@ -4,7 +4,7 @@
 **Current Phase**: Phase 5 - Refinement & Optimization
 **Current Version**: 0.1.107
 **Overall Progress**: 99% (Core features complete, Reddit LLM compliance achieved)
-**Status**: Phase 5.57 Complete ✅ | Confidence Calibration Implementation Complete
+**Status**: Phase 5.58 Complete ✅ | Evidence Extraction Implementation Complete
 
 ---
 
@@ -32,6 +32,62 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.58 (2025-11-03)
+- [x] **Evidence Extraction Implementation** - Added structured evidence extraction to AI question responses for transparency and debugging
+- [x] Added `EvidencePiece` interface in `src/types/ai.ts` for extracting evidence from user content
+- [x] Added `EnhancedAIQuestionAnswer` interface extending `AIAnswer` with optional evidence fields
+- [x] Updated Zod validator schema in `src/ai/validator.ts` to support optional evidence fields
+- [x] Added `EvidencePieceSchema` for validating evidence structure
+- [x] Enhanced `AIAnswerSchema` with optional `evidencePieces`, `falsePositivePatternsDetected`, and `negationDetected` fields
+- [x] Updated prompt output format in `src/ai/prompts.ts` to request evidence extraction from AI
+- [x] Enhanced JSON response format to include evidence pieces with type, quote, and source
+- [x] Added instructions for AI to extract exact quotes and identify false positive patterns
+- [x] Verified backward compatibility - all evidence fields are optional
+- [x] All existing tests pass (42 validator tests, 143 total tests passing)
+- [x] No new TypeScript errors introduced
+
+**Key Implementation Details**:
+- All evidence fields are optional (`?` in TypeScript, `.optional()` in Zod schemas)
+- Maintains full backward compatibility with existing simple `AIAnswer` responses
+- AI can now include structured evidence in responses showing exactly what was found
+- Evidence includes type classification (DIRECT, IMPLIED, CONTEXTUAL, etc.)
+- Exact quotes with source locations (post ID, comment ID, or "profile")
+- False positive pattern detection (empty array if none found)
+- Negation detection for "NOT doing X" statements
+- Comprehensive JSDoc comments for all new interfaces
+
+**Evidence Structure Example**:
+```typescript
+{
+  questionId: "dating_detection",
+  answer: "YES",
+  confidence: 85,
+  reasoning: "User explicitly states location and asks to DM",
+  evidencePieces: [
+    {
+      type: "DIRECT",
+      quote: "NYC here, DM me if interested",
+      source: "current_post"
+    }
+  ],
+  falsePositivePatternsDetected: [],
+  negationDetected: false
+}
+```
+
+**Testing**:
+- All 42 validator tests passing
+- All 143 existing tests passing
+- No TypeScript errors in modified files
+- Backward compatibility verified
+
+**Impact**:
+- Provides transparency for moderators to verify AI reasoning
+- Enables debugging of false positives with structured evidence
+- Foundation for Enhanced AI Questions system
+- Moderators can see exactly what evidence AI found and why
+- Supports future confidence calibration integration
 
 ### Phase 5.57 (2025-11-03)
 - [x] **Confidence Calibration Implementation** - Implemented core confidence calibration system for Enhanced AI Questions

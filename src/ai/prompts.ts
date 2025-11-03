@@ -655,7 +655,16 @@ Body: ${bodyResult.sanitizedContent}`;
       "questionId": "${q.id}",
       "answer": "YES" or "NO",
       "confidence": 0-100,
-      "reasoning": "brief explanation"
+      "reasoning": "2-3 sentences explaining your decision",
+      "evidencePieces": [
+        {
+          "type": "<evidence type from question's analysis framework>",
+          "quote": "<exact quote from user content>",
+          "source": "<post ID, comment ID, or 'profile'>"
+        }
+      ],
+      "falsePositivePatternsDetected": ["<pattern1>", "<pattern2>"],
+      "negationDetected": true|false
     }`
       )
       .join(',\n');
@@ -670,6 +679,9 @@ Answer the following questions about this user based on their profile, posting h
 - Provide a binary answer: YES or NO (answer YES if the evidence points toward yes, even if not 100% certain)
 - Include a confidence score from 0-100 (how certain are you?)
 - Provide brief reasoning explaining your answer
+- Extract specific evidence pieces that support your answer
+- Identify any false positive patterns you detected
+- Note if negation language was found ("NOT looking for X")
 
 DECISION FRAMEWORK:
 - Answer YES if the available evidence suggests the answer is more likely yes than no
@@ -694,7 +706,13 @@ Important:
 - Each answer must have: questionId, answer (YES/NO), confidence (0-100), and reasoning
 - Your answer (YES/NO) should reflect the preponderance of evidence - which direction does the evidence point?
 - Your confidence score should reflect how strong that evidence is
-- Be specific in your reasoning - cite what evidence led to your answer`;
+- Be specific in your reasoning - cite what evidence led to your answer
+- Include evidencePieces array with ALL pieces of evidence you found
+- Quote exact text in evidencePieces, don't paraphrase
+- Include source for each piece (post ID if from history, "current_post" if from submission, "profile" if from user metadata)
+- List any false positive patterns you detected in falsePositivePatternsDetected (or empty array if none)
+- Set negationDetected=true if you found negation language ("NOT looking", "don't want", etc.)
+- Evidence fields (evidencePieces, falsePositivePatternsDetected, negationDetected) are optional - include them if relevant`;
 
     // Calculate total PII removed
     const totalPiiRemoved =

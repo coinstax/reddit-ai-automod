@@ -133,14 +133,35 @@ const OverallRiskSchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 const RecommendedActionSchema = z.enum(['APPROVE', 'FLAG', 'REMOVE']);
 
 /**
+ * Zod schema for validating evidence pieces extracted from user content
+ * Each piece includes type, quote, and source location
+ */
+const EvidencePieceSchema = z.object({
+  type: z.string(),
+  quote: z.string(),
+  source: z.string(),
+});
+
+/**
  * Zod schema for validating custom question-based AI analysis results
  * Ensures answer format matches expected structure
+ *
+ * Enhanced with optional evidence extraction fields for transparency:
+ * - evidencePieces: Array of evidence supporting the answer
+ * - falsePositivePatternsDetected: Array of false positive patterns found
+ * - negationDetected: Whether negation language was detected
+ *
+ * All evidence fields are optional for backward compatibility with simple questions.
  */
 const AIAnswerSchema = z.object({
   questionId: z.string(),
   answer: z.enum(['YES', 'NO']),
   confidence: z.number().min(0).max(100),
   reasoning: z.string(),
+  // Optional evidence extraction fields
+  evidencePieces: z.array(EvidencePieceSchema).optional(),
+  falsePositivePatternsDetected: z.array(z.string()).optional(),
+  negationDetected: z.boolean().optional(),
 });
 
 const AIQuestionBatchResultSchema = z.object({

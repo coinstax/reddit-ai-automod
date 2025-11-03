@@ -753,6 +753,18 @@ export interface EnhancedAIQuestion {
 }
 
 /**
+ * Evidence piece extracted from user profile/content
+ */
+export interface EvidencePiece {
+  /** Evidence type (e.g., "DIRECT", "IMPLIED", "CONTEXTUAL") */
+  type: string;
+  /** Exact quote showing the evidence */
+  quote: string;
+  /** Source location (post ID, comment ID, or "profile") */
+  source: string;
+}
+
+/**
  * AI answer to a custom question
  * Contains YES/NO answer with confidence score and reasoning
  */
@@ -765,6 +777,63 @@ export interface AIAnswer {
   confidence: number;
   /** Explanation for the answer */
   reasoning: string;
+}
+
+/**
+ * Enhanced AI question answer with evidence extraction
+ *
+ * Extends the basic AIAnswer with optional evidence extraction fields for transparency
+ * and debugging. Provides moderators with structured evidence showing exactly what the
+ * AI found and whether any false positive patterns were detected.
+ *
+ * Backward Compatible: All evidence fields are optional. Existing simple questions that
+ * don't provide analysis frameworks will still work.
+ *
+ * @example
+ * ```typescript
+ * // Simple answer (backward compatible)
+ * const simple: EnhancedAIQuestionAnswer = {
+ *   questionId: "spam_check",
+ *   answer: "NO",
+ *   confidence: 95,
+ *   reasoning: "User has established posting history"
+ * };
+ *
+ * // Enhanced answer with evidence
+ * const enhanced: EnhancedAIQuestionAnswer = {
+ *   questionId: "dating_detection",
+ *   answer: "YES",
+ *   confidence: 85,
+ *   reasoning: "User explicitly states location and asks to DM",
+ *   evidencePieces: [
+ *     {
+ *       type: "DIRECT",
+ *       quote: "NYC here, DM me if interested",
+ *       source: "current_post"
+ *     }
+ *   ],
+ *   falsePositivePatternsDetected: [],
+ *   negationDetected: false
+ * };
+ * ```
+ */
+export interface EnhancedAIQuestionAnswer {
+  /** Question ID this answer corresponds to */
+  questionId: string;
+  /** Binary answer */
+  answer: 'YES' | 'NO';
+  /** Confidence score 0-100 */
+  confidence: number;
+  /** Human-readable reasoning */
+  reasoning: string;
+
+  // Evidence extraction fields (optional for backward compatibility)
+  /** Specific evidence pieces that support the answer */
+  evidencePieces?: EvidencePiece[];
+  /** False positive patterns detected (empty array if none) */
+  falsePositivePatternsDetected?: string[];
+  /** Whether negation was detected ("NOT looking to date") */
+  negationDetected?: boolean;
 }
 
 /**
