@@ -34,110 +34,127 @@ This document provides the complete enhanced dating detection configuration for 
 
 ```json
 {
-  "type": "AI",
-  "action": "FLAG",
-  "priority": 100,
-  "description": "Flag users seeking romantic/sexual relationships (enhanced with evidence extraction and confidence calibration)",
-  "ai": {
-    "id": "dating_solicitation_enhanced",
-    "question": "Is this user actively soliciting romantic or sexual relationships in this community?",
-    "context": "This is r/FriendsOver40, a platonic friendship community for people aged 40+. Dating solicitation violates Rule 3. Users often DISCUSS dating as a topic - this is NOT solicitation. Distinguish between: (1) SOLICITATION: user seeks dates/relationships for themselves, (2) DISCUSSION: user talks about dating generally or gives advice.",
+  "rules": [
+    {
+      "description": "Flag users seeking romantic/sexual relationships (enhanced)",
+      "priority": 100,
 
-    "confidenceGuidance": {
-      "lowConfidence": "Discussing dating as a topic, sharing past experiences, or giving advice to others. Language is general, past tense, or third-person. No active solicitation detected.",
-      "mediumConfidence": "Ambiguous language that could indicate interest ('open to possibilities', 'seeing where things go') but lacks explicit solicitation. May be discussing preferences without actively seeking.",
-      "highConfidence": "Explicit solicitation with at least 2 clear indicators: location + dating intent, direct invitations (DM me, message me), dating acronyms (FWB, NSA, ONS), affair seeking while mentioning partner, combination of suggestive language + contact method."
-    },
+      "ai": {
+        "id": "dating_solicitation_enhanced",
+        "question": "Is this user actively soliciting romantic or sexual relationships in this community?",
 
-    "analysisFramework": {
-      "evidenceTypes": [
-        "DIRECT: Explicit solicitation language ('looking for girlfriend/boyfriend', 'seeking romance', 'want to date', 'looking for more than friends')",
-        "IMPLIED: Suggestive language with dating context ('open to anything', 'see where it goes', 'chemistry', 'connection', 'spark')",
-        "CONTEXTUAL: Location + invitation combination ('NYC here, DM me', 'Chicago, let's meet', 'Bay Area, message me')",
-        "ACRONYMS: Dating-specific acronyms (FWB, NSA, ONS, AP, CLDCD)",
-        "AFFAIR: Seeking affairs while mentioning partner ('married but lonely', 'husband doesn't understand', 'looking elsewhere')",
-        "DISCUSSION: Talking about dating generally - NOT solicitation ('dating apps are terrible', 'when I was dating', 'my friend is dating')",
-        "NEGATED: Explicitly NOT seeking ('NOT looking for dates', 'platonic only', 'just friends', 'no romance')"
-      ],
+        "context": "This is r/FriendsOver40, a platonic friendship community for people aged 40+. Dating solicitation violates Rule 3. Users often DISCUSS dating as a topic - this is NOT solicitation. Distinguish between: (1) SOLICITATION: user seeks dates/relationships for themselves, (2) DISCUSSION: user talks about dating generally or gives advice.",
 
-      "falsePositiveFilters": [
-        "Quoting or referencing subreddit rules about no dating",
-        "Telling stories about past dating experiences (past tense)",
-        "Giving dating advice to other users (third person)",
-        "Complaining about dating attempts in the community",
-        "Discussing dating culture, trends, or apps generally",
-        "Using 'date' to mean calendar date, appointment, or fruit",
-        "Negated statements with 'not', 'never', 'don't want'",
-        "Conditional statements ('if you want to date, try r/dating')",
-        "Sarcasm or humor about dating",
-        "Mentioning being happily married, partnered, or single",
-        "Discussing platonic relationship preferences",
-        "Asking about friendship activities that could be dates (coffee, walks) without romantic context"
-      ]
-    },
+        "confidenceGuidance": {
+          "lowConfidence": "Discussing dating as a topic, sharing past experiences, or giving advice to others. Language is general, past tense, or third-person. No active solicitation detected.",
+          "mediumConfidence": "Ambiguous language that could indicate interest ('open to possibilities', 'seeing where things go') but lacks explicit solicitation. May be discussing preferences without actively seeking.",
+          "highConfidence": "Explicit solicitation with at least 2 clear indicators: location + dating intent, direct invitations (DM me, message me), dating acronyms (FWB, NSA, ONS), affair seeking while mentioning partner, combination of suggestive language + contact method."
+        },
 
-    "evidenceRequired": {
-      "minPieces": 2,
-      "types": ["DIRECT", "IMPLIED", "CONTEXTUAL", "ACRONYMS", "AFFAIR"],
-      "includePermalinks": true
-    },
+        "analysisFramework": {
+          "evidenceTypes": [
+            "DIRECT: Explicit solicitation language ('looking for girlfriend/boyfriend', 'seeking romance', 'want to date', 'looking for more than friends')",
+            "IMPLIED: Suggestive language with dating context ('open to anything', 'see where it goes', 'chemistry', 'connection', 'spark')",
+            "CONTEXTUAL: Location + invitation combination ('NYC here, DM me', 'Chicago, let's meet', 'Bay Area, message me')",
+            "ACRONYMS: Dating-specific acronyms (FWB, NSA, ONS, AP, CLDCD)",
+            "AFFAIR: Seeking affairs while mentioning partner ('married but lonely', 'husband doesn't understand', 'looking elsewhere')",
+            "DISCUSSION: Talking about dating generally - NOT solicitation ('dating apps are terrible', 'when I was dating', 'my friend is dating')",
+            "NEGATED: Explicitly NOT seeking ('NOT looking for dates', 'platonic only', 'just friends', 'no romance')"
+          ],
 
-    "negationHandling": {
-      "enabled": true,
-      "patterns": [
-        "NOT looking",
-        "no dating",
-        "don't want",
-        "platonic only",
-        "just friends",
-        "friends only",
-        "no romance",
-        "not interested in"
-      ]
-    },
+          "falsePositiveFilters": [
+            "Quoting or referencing subreddit rules about no dating",
+            "Telling stories about past dating experiences (past tense)",
+            "Giving dating advice to other users (third person)",
+            "Complaining about dating attempts in the community",
+            "Discussing dating culture, trends, or apps generally",
+            "Using 'date' to mean calendar date, appointment, or fruit",
+            "Negated statements with 'not', 'never', 'don't want'",
+            "Conditional statements ('if you want to date, try r/dating')",
+            "Sarcasm or humor about dating",
+            "Mentioning being happily married, partnered, or single",
+            "Discussing platonic relationship preferences",
+            "Asking about friendship activities that could be dates (coffee, walks) without romantic context"
+          ]
+        },
 
-    "examples": [
-      {
-        "scenario": "User posts: 'NYC here, 40M, DM me if you want to grab coffee and see where things go'",
-        "expectedAnswer": "YES",
-        "confidence": 95,
-        "reasoning": "DIRECT evidence: location + invitation + suggestive language ('see where things go'). Clear solicitation."
+        "evidenceRequired": {
+          "minPieces": 2,
+          "types": ["DIRECT", "IMPLIED", "CONTEXTUAL", "ACRONYMS", "AFFAIR"]
+        },
+
+        "negationHandling": {
+          "enabled": true,
+          "patterns": [
+            "NOT looking",
+            "no dating",
+            "don't want",
+            "platonic only",
+            "just friends",
+            "friends only",
+            "no romance",
+            "not interested in"
+          ]
+        },
+
+        "examples": [
+          {
+            "scenario": "User posts: 'NYC here, 40M, DM me if you want to grab coffee and see where things go'",
+            "expectedAnswer": "YES",
+            "confidence": 95,
+            "reasoning": "DIRECT evidence: location + invitation + suggestive language ('see where things go'). Clear solicitation."
+          },
+          {
+            "scenario": "User posts: 'Dating apps are so superficial. Anyone else sick of them?'",
+            "expectedAnswer": "NO",
+            "confidence": 10,
+            "reasoning": "DISCUSSION evidence: complaining about dating apps generally. No solicitation detected."
+          },
+          {
+            "scenario": "User posts: 'When I was dating in my 30s, I had similar experiences'",
+            "expectedAnswer": "NO",
+            "confidence": 5,
+            "reasoning": "DISCUSSION evidence: past tense story. Not actively seeking."
+          },
+          {
+            "scenario": "User posts: 'Married but looking for NSA. Chicago area.'",
+            "expectedAnswer": "YES",
+            "confidence": 98,
+            "reasoning": "AFFAIR + ACRONYMS + CONTEXTUAL evidence: seeking affair (NSA acronym) with location. Very clear solicitation."
+          },
+          {
+            "scenario": "User posts: 'NOT looking to date! Just want platonic friends.'",
+            "expectedAnswer": "NO",
+            "confidence": 3,
+            "reasoning": "NEGATED evidence: explicit negation detected. User is stating opposite of solicitation."
+          }
+        ]
       },
-      {
-        "scenario": "User posts: 'Dating apps are so superficial. Anyone else sick of them?'",
-        "expectedAnswer": "NO",
-        "confidence": 10,
-        "reasoning": "DISCUSSION evidence: complaining about dating apps generally. No solicitation detected. This is a false positive to avoid."
+
+      "conditions": {
+        "logicalOperator": "AND",
+        "rules": [
+          {
+            "field": "ai.answer",
+            "operator": "==",
+            "value": "YES"
+          },
+          {
+            "field": "ai.confidence",
+            "operator": ">=",
+            "value": 70
+          }
+        ]
       },
-      {
-        "scenario": "User posts: 'When I was dating in my 30s, I had similar experiences'",
-        "expectedAnswer": "NO",
-        "confidence": 5,
-        "reasoning": "DISCUSSION evidence: past tense story. Not actively seeking. This is a false positive to avoid."
-      },
-      {
-        "scenario": "User posts: 'Married but looking for NSA. Chicago area.'",
-        "expectedAnswer": "YES",
-        "confidence": 98,
-        "reasoning": "AFFAIR + ACRONYMS + CONTEXTUAL evidence: seeking affair (NSA acronym) with location. Very clear solicitation."
-      },
-      {
-        "scenario": "User posts: 'NOT looking to date! Just want platonic friends.'",
-        "expectedAnswer": "NO",
-        "confidence": 3,
-        "reasoning": "NEGATED evidence: explicit negation detected. User is stating opposite of solicitation."
+
+      "action": "FLAG",
+
+      "actionConfig": {
+        "reason": "Rule 3 violation: Appears to be seeking romantic/sexual relationships rather than platonic friendship",
+        "message": "Hi there! This community is for platonic friendships only. Your post appears to be seeking romantic or dating connections, which violates our Rule 3. If you're looking for friendship only, please clarify in your post. Otherwise, you may want to try r/Dating_Over_Forty or similar communities. Thanks!"
       }
-    ]
-  },
-  "actionConfig": {
-    "reason": "Rule 3 violation: Appears to be seeking romantic/sexual relationships rather than platonic friendship",
-    "message": "Hi there! This community is for platonic friendships only. Your post appears to be seeking romantic or dating connections, which violates our Rule 3. If you're looking for friendship only, please clarify in your post. Otherwise, you may want to try r/Dating_Over_Forty or similar communities. Thanks!",
-    "sticky": false,
-    "lock": false
-  },
-  "layer": 3,
-  "aiQuestions": ["dating_solicitation_enhanced"],
-  "confidenceThreshold": 70
+    }
+  ]
 }
 ```
 
