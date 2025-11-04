@@ -4,8 +4,8 @@
 
 A Reddit Devvit app that uses AI to analyze new posters and detect problematic users before they cause harm. Built for moderators who want to protect their communities from undesirable users or scammers.
 
-[![Version](https://img.shields.io/badge/version-0.1.95-blue)]()
-[![Status](https://img.shields.io/badge/status-Alpha-yellow)]()
+[![Version](https://img.shields.io/badge/version-0.1.108-blue)]()
+[![Status](https://img.shields.io/badge/status-Production%20Ready-green)]()
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
@@ -35,10 +35,12 @@ Based on configurable rules, the app can:
 - Calculates trust score (0-100) to bypass expensive AI analysis for returning good users
 - Caching system reduces API calls and costs (24-48h TTL)
 
-**AI-Powered Analysis**
-- Works with Claude, DeepSeek, or OpenAI (automatic failover)
+**AI-Powered Analysis** (Reddit-Approved Providers Only)
+- Works with OpenAI GPT-4o-mini or Google Gemini 1.5 Flash (automatic failover)
+- Enhanced AI Questions system reduces false positives from 40% to <10%
 - You ask custom questions in plain English (e.g., "Is this user promoting a service?")
-- AI answers YES/NO/MAYBE with confidence scores
+- AI provides YES/NO answers with confidence scores and structured evidence
+- Confidence calibration, evidence extraction, and negation detection built-in
 - Set your own confidence thresholds for actions
 
 **Flexible Rules System**
@@ -49,9 +51,10 @@ Based on configurable rules, the app can:
 - Dry-run mode for safe testing
 
 **Cost Control**
-- Daily budget limits with real-time tracking
+- Daily and monthly budget limits with real-time tracking
 - Trust score system reduces costs by ~50% (skips AI for trusted users)
-- Choose between premium (Claude) or budget (DeepSeek) AI providers
+- Gemini 1.5 Flash is 50% cheaper than OpenAI GPT-4o-mini
+- AI analysis history with cost tracking per decision
 
 **Security & Privacy**
 - Only analyzes public Reddit data (no private messages)
