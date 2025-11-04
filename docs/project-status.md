@@ -4,7 +4,7 @@
 **Current Phase**: Phase 5 - Refinement & Optimization
 **Current Version**: 0.1.107
 **Overall Progress**: 100% (Core features complete, Enhanced AI Questions system fully implemented)
-**Status**: Phase 5.60 Complete ✅ | Enhanced AI Questions System Ready for Production
+**Status**: Phase 5.61 Complete ✅ | Rule Schema Simplified
 
 ---
 
@@ -32,6 +32,24 @@ Reddit AI Automod is a user profiling & analysis system for Reddit communities. 
 ---
 
 ## Recent Completed Tasks
+
+### Phase 5.61 (2025-11-03)
+- [x] **Rule Schema Simplification** - Removed unnecessary timestamp fields from individual rules
+- [x] Removed `createdAt` and `updatedAt` from BaseRule interface in src/types/rules.ts
+- [x] Removed auto-generation of timestamps in schema validator (src/rules/schemaValidator.ts)
+- [x] Updated documentation to reflect simplified schema (docs/simplified-schema-guide.md)
+- [x] Updated test files to remove timestamp expectations (src/rules/__tests__/aiFieldSchema.test.ts)
+- [x] Fixed storage.ts to not add updatedAt when updating rules
+- [x] RuleSet still has updatedAt (tracks when entire ruleset was last loaded) - this is appropriate
+- [x] All rule tests passing (50/50)
+- [x] No TypeScript errors related to timestamp changes
+
+**Impact**:
+- Cleaner, simpler schema for moderators writing JSON rules
+- Removed overengineering that provided no user-facing value
+- Individual rules have no timestamp fields
+- RuleSet-level updatedAt remains for tracking when rules were last loaded
+- Fully backward compatible with existing rule configurations
 
 ### Phase 5.60 (2025-11-03)
 - [x] **FriendsOver40 Enhanced Dating Detection** - Created production-ready configuration and testing guide
