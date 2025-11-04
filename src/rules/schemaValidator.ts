@@ -541,14 +541,6 @@ export class RuleSchemaValidator {
         rule.contentType = 'any';
       }
 
-      // Add timestamps if missing
-      if (!rule.createdAt) {
-        rule.createdAt = Date.now();
-      }
-      if (!rule.updatedAt) {
-        rule.updatedAt = Date.now();
-      }
-
       // Subreddit field (optional, for rule-level overrides)
       if (rule.subreddit === undefined) {
         rule.subreddit = null;

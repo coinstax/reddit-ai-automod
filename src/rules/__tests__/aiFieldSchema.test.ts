@@ -266,9 +266,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'Test'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       evaluator.setCurrentRule(rule);
@@ -297,9 +295,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'Test'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       evaluator.setCurrentRule(rule);
@@ -328,9 +324,7 @@ describe('AI Field Schema Tests', () => {
         action: 'APPROVE',
         actionConfig: {
           reason: 'Test'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       evaluator.setCurrentRule(rule);
@@ -359,9 +353,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'Test'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       // Old path should still work
@@ -472,9 +464,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'AI detected: {ai.answer}'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       substitutor.setCurrentRule(rule);
@@ -503,9 +493,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'Confidence: {ai.confidence}%'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       substitutor.setCurrentRule(rule);
@@ -534,9 +522,7 @@ describe('AI Field Schema Tests', () => {
         action: 'FLAG',
         actionConfig: {
           reason: 'Dating check: {ai.dating_intent.answer}'
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now()
+        }
       };
 
       substitutor.setCurrentRule(rule);

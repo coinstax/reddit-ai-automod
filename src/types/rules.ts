@@ -147,10 +147,6 @@ export interface BaseRule {
   action: ModerationAction;
   /** Action configuration */
   actionConfig: ActionConfig;
-  /** Creation timestamp (milliseconds since epoch) */
-  createdAt: number;
-  /** Last update timestamp (milliseconds since epoch) */
-  updatedAt: number;
 }
 
 /**

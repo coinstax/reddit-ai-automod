@@ -28,9 +28,7 @@ Moderators had to specify many fields manually:
       "action": "FLAG",
       "actionConfig": {
         "reason": "Low karma"
-      },
-      "createdAt": 1234567890,
-      "updatedAt": 1234567890
+      }
     }
   ]
 }
@@ -353,7 +351,7 @@ Check the console logs for validation warnings when rules are loaded.
 ### From Old Schema to New Schema
 
 1. **Remove all auto-generated fields:**
-   - Remove `id`, `name`, `type`, `enabled`, `priority`, `createdAt`, `updatedAt`
+   - Remove `id`, `name`, `type`, `enabled`, `priority`
    - Keep them only if you want specific values
 
 2. **Remove top-level metadata:**
@@ -393,9 +391,7 @@ Check the console logs for validation warnings when rules are loaded.
       "action": "FLAG",
       "actionConfig": {
         "reason": "Low karma"
-      },
-      "createdAt": 1234567890,
-      "updatedAt": 1234567890
+      }
     }
   ]
 }
@@ -455,8 +451,6 @@ While the JSON schema is simplified, the validator adds these internal fields fo
 - `priority`: Array index × 10
 - `contentType`: `"any"` (mapped to internal format)
 - `subreddit`: `null`
-- `createdAt`: Current timestamp
-- `updatedAt`: Current timestamp
 - `actionConfig`: `{ reason: "Rule matched" }` if not provided
 
 These fields are added during validation so that all downstream code continues to work without modification.

@@ -229,7 +229,6 @@ export class RuleStorage {
       ruleSet.rules[ruleIndex] = {
         ...ruleSet.rules[ruleIndex],
         ...updates,
-        updatedAt: Date.now(),
       } as Rule;
 
       // Re-sort if priority changed
