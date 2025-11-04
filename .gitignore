@@ -5,6 +5,30 @@ CLAUDE.md
 .claude/
 .cursor/
 .aider*
+.agent-tasks/
+.agents/
+.task_brief.md
+
+# Internal documentation (keep local, not in git)
+docs/project-status.md
+docs/resume-prompt.md
+docs/phase*.md
+docs/*-design.md
+docs/*-implementation*.md
+docs/*-testing*.md
+docs/implementation-plan.md
+docs/predetermined-rules.md
+docs/queue-system-design.md
+docs/security-fixes-*.md
+docs/simplified-schema-guide.md
+docs/upload-process.md
+docs/reddit.md
+docs/devvit-reference.md
+docs/ai-provider-comparison.md
+docs/enhanced-ai-questions-*.md
+docs/dating-detection-*.md
+docs/research/
+docs/example-rules/
 
 # Environment variables and secrets
 .env
