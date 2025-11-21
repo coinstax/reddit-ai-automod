@@ -30,7 +30,7 @@ import type {
   TrustEvaluation,
   ApprovedContentRecord,
 } from '../types/communityTrust';
-import { buildUserKey, buildGlobalKey } from '../storage/keyBuilder.js';
+import { buildUserKey, buildGlobalKey, DEFAULT_SETTINGS_VERSION } from '../storage/keyBuilder.js';
 
 /**
  * Manages community-specific trust scores for users
@@ -41,7 +41,7 @@ export class CommunityTrustManager {
   private config = {
     minApprovalRate: 70,
     minSubmissionsPost: 3,
-    minSubmissionsComment: 2, // Lower threshold for comments
+    minSubmissionsComment: 3, // Same threshold as posts to prevent gaming
     decayRatePerMonth: 5,
   };
 
@@ -63,7 +63,7 @@ export class CommunityTrustManager {
     contentType: 'post' | 'comment'
   ): Promise<TrustEvaluation> {
     try {
-      const key = buildUserKey(userId, 'trust', subreddit);
+      const key = buildUserKey(userId, DEFAULT_SETTINGS_VERSION, 'trust', subreddit);
       const trustData = await this.redis.get(key);
 
       if (!trustData) {
@@ -158,7 +158,7 @@ export class CommunityTrustManager {
     contentType: 'post' | 'comment'
   ): Promise<{ oldScore: number; newScore: number; delta: number }> {
     try {
-      const key = buildUserKey(userId, 'trust', subreddit);
+      const key = buildUserKey(userId, DEFAULT_SETTINGS_VERSION, 'trust', subreddit);
       const trustData = await this.redis.get(key);
 
       let trust: CommunityTrust;
@@ -198,7 +198,7 @@ export class CommunityTrustManager {
       trust.lastCalculated = new Date();
 
       // Track this user in the users set for this subreddit (for reset functionality)
-      const usersSetKey = buildGlobalKey('tracking', subreddit, 'users');
+      const usersSetKey = buildGlobalKey(DEFAULT_SETTINGS_VERSION, 'tracking', subreddit, 'users');
       await this.redis.zAdd(usersSetKey, { member: userId, score: Date.now() });
 
       await this.redis.set(key, JSON.stringify(trust));
@@ -237,7 +237,7 @@ export class CommunityTrustManager {
     contentType: 'post' | 'comment'
   ): Promise<void> {
     try {
-      const key = buildGlobalKey('tracking', 'content', contentId);
+      const key = buildGlobalKey(DEFAULT_SETTINGS_VERSION, 'tracking', 'content', contentId);
       const record: ApprovedContentRecord = {
         contentId,
         userId,
@@ -277,8 +277,8 @@ export class CommunityTrustManager {
   ): Promise<{ oldScore: number; newScore: number; delta: number } | null> {
     try {
       // Note: For tracking keys, we need content ID as primary key since we don't know user/subreddit yet
-      // Using global pattern: v1:global:tracking:content:{contentId}
-      const trackingKey = buildGlobalKey('tracking', 'content', contentId);
+      // Using global pattern: v1:1:global:tracking:content:{contentId}
+      const trackingKey = buildGlobalKey(DEFAULT_SETTINGS_VERSION, 'tracking', 'content', contentId);
       const recordData = await this.redis.get(trackingKey);
 
       if (!recordData) {
@@ -289,7 +289,7 @@ export class CommunityTrustManager {
       const record = JSON.parse(recordData) as ApprovedContentRecord;
       const { userId, subreddit, contentType } = record;
 
-      const trustKey = buildUserKey(userId, 'trust', subreddit);
+      const trustKey = buildUserKey(userId, DEFAULT_SETTINGS_VERSION, 'trust', subreddit);
       const trustData = await this.redis.get(trustKey);
 
       if (!trustData) {

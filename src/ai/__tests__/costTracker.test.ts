@@ -33,12 +33,43 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { CostTracker } from '../costTracker.js';
 import type { CostRecord } from '../../types/ai.js';
+import { GlobalKeys } from '../../storage/keyBuilder.js';
+
+/**
+ * Mock settings for testing
+ */
+class MockSettings {
+  private settings: Map<string, any> = new Map();
+
+  constructor() {
+    // Set default budget settings
+    this.settings.set('dailyLimitUSD', 5.0);
+    this.settings.set('monthlyLimitUSD', 150.0);
+  }
+
+  async get(key: string): Promise<any> {
+    return this.settings.get(key);
+  }
+
+  async getAll(): Promise<Record<string, any>> {
+    const all: Record<string, any> = {};
+    this.settings.forEach((value, key) => {
+      all[key] = value;
+    });
+    return all;
+  }
+
+  set(key: string, value: any): void {
+    this.settings.set(key, value);
+  }
+}
 
 /**
  * Mock Devvit context structure
  */
 interface MockContext {
   redis: MockRedis;
+  settings: MockSettings;
 }
 
 /**
@@ -108,9 +139,11 @@ class MockLogger {
  */
 function createMockContext(): MockContext {
   const mockRedis = new MockRedis();
+  const mockSettings = new MockSettings();
 
   return {
     redis: mockRedis,
+    settings: mockSettings,
   };
 }
 
@@ -182,7 +215,7 @@ describe('CostTracker', () => {
     it('should return false when cost would exceed daily budget', async () => {
       // Set daily spending to $4.00 = 400 cents (daily limit is $5.00 = 500 cents)
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '400');
+      await mockRedis.set(GlobalKeys.costDaily(today), '400');
 
       // Try to spend $2.00 (would total $6.00, exceeding $5.00 limit)
       const canAfford = await costTracker.canAfford(2.0);
@@ -191,7 +224,7 @@ describe('CostTracker', () => {
 
     it('should return false when budget is already exceeded', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '550'); // $5.50 = 550 cents
+      await mockRedis.set(GlobalKeys.costDaily(today), '550'); // $5.50 = 550 cents
 
       const canAfford = await costTracker.canAfford(0.1);
       expect(canAfford).toBe(false);
@@ -218,9 +251,9 @@ describe('CostTracker', () => {
       const month = today.substring(0, 7);
 
       // Verify increments were applied ($0.05 = 5 cents)
-      expect(await mockRedis.get(`cost:daily:${today}`)).toBe('5');
-      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('5');
-      expect(await mockRedis.get(`cost:monthly:${month}`)).toBe('5');
+      expect(await mockRedis.get(GlobalKeys.costDaily(today))).toBe('5');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'openai'))).toBe('5');
+      expect(await mockRedis.get(GlobalKeys.costMonthly(month))).toBe('5');
     });
 
     it('should track per-provider costs separately', async () => {
@@ -231,9 +264,9 @@ describe('CostTracker', () => {
       await costTracker.recordCost(createCostRecord({ costUSD: 0.02, provider: 'gemini' }));
 
       // $0.05 = 5 cents, $0.10 = 10 cents, $0.02 = 2 cents, total = 17 cents
-      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('15');
-      expect(await mockRedis.get(`cost:daily:${today}:gemini`)).toBe('2');
-      expect(await mockRedis.get(`cost:daily:${today}`)).toBe('17');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'openai'))).toBe('15');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'gemini'))).toBe('2');
+      expect(await mockRedis.get(GlobalKeys.costDaily(today))).toBe('17');
     });
 
     it('should handle concurrent cost recording without race conditions', async () => {
@@ -245,7 +278,7 @@ describe('CostTracker', () => {
       await Promise.all(promises);
 
       const today = new Date().toISOString().split('T')[0];
-      const total = parseInt((await mockRedis.get(`cost:daily:${today}`)) || '0');
+      const total = parseInt((await mockRedis.get(GlobalKeys.costDaily(today))) || '0');
 
       // Should be exactly 50 cents (10 * $0.05), no lost updates
       expect(total).toBe(50);
@@ -255,7 +288,7 @@ describe('CostTracker', () => {
       const record = createCostRecord();
       await costTracker.recordCost(record);
 
-      const recordKey = `cost:record:${record.timestamp}:${record.userId}`;
+      const recordKey = GlobalKeys.costRecord(record.timestamp, record.userId);
       const stored = await mockRedis.get(recordKey);
       expect(stored).toBeDefined();
       expect(JSON.parse(stored!)).toEqual(record);
@@ -289,10 +322,10 @@ describe('CostTracker', () => {
       const month = today.substring(0, 7);
 
       // Set values in cents: $2.50 = 250, $2.00 = 200, $0.50 = 50, $15.75 = 1575
-      await mockRedis.set(`cost:daily:${today}`, '250');
-      await mockRedis.set(`cost:daily:${today}:openai`, '200');
-      await mockRedis.set(`cost:daily:${today}:gemini`, '50');
-      await mockRedis.set(`cost:monthly:${month}`, '1575');
+      await mockRedis.set(GlobalKeys.costDaily(today), '250');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'openai'), '200');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'gemini'), '50');
+      await mockRedis.set(GlobalKeys.costMonthly(month), '1575');
 
       const status = await costTracker.getBudgetStatus();
 
@@ -305,7 +338,7 @@ describe('CostTracker', () => {
 
     it('should calculate alert level NONE for low spending', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '100'); // $1.00 = 100 cents = 20%
+      await mockRedis.set(GlobalKeys.costDaily(today), '100'); // $1.00 = 100 cents = 20%
 
       const status = await costTracker.getBudgetStatus();
       expect(status.alertLevel).toBe('NONE');
@@ -313,7 +346,7 @@ describe('CostTracker', () => {
 
     it('should calculate alert level WARNING_50 at 50% threshold', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '250'); // $2.50 = 250 cents = 50%
+      await mockRedis.set(GlobalKeys.costDaily(today), '250'); // $2.50 = 250 cents = 50%
 
       const status = await costTracker.getBudgetStatus();
       expect(status.alertLevel).toBe('WARNING_50');
@@ -321,7 +354,7 @@ describe('CostTracker', () => {
 
     it('should calculate alert level WARNING_75 at 75% threshold', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '375'); // $3.75 = 375 cents = 75%
+      await mockRedis.set(GlobalKeys.costDaily(today), '375'); // $3.75 = 375 cents = 75%
 
       const status = await costTracker.getBudgetStatus();
       expect(status.alertLevel).toBe('WARNING_75');
@@ -329,7 +362,7 @@ describe('CostTracker', () => {
 
     it('should calculate alert level WARNING_90 at 90% threshold', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '450'); // $4.50 = 450 cents = 90%
+      await mockRedis.set(GlobalKeys.costDaily(today), '450'); // $4.50 = 450 cents = 90%
 
       const status = await costTracker.getBudgetStatus();
       expect(status.alertLevel).toBe('WARNING_90');
@@ -337,7 +370,7 @@ describe('CostTracker', () => {
 
     it('should calculate alert level EXCEEDED when over budget', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '550'); // $5.50 = 550 cents = 110%
+      await mockRedis.set(GlobalKeys.costDaily(today), '550'); // $5.50 = 550 cents = 110%
 
       const status = await costTracker.getBudgetStatus();
       expect(status.alertLevel).toBe('EXCEEDED');
@@ -361,9 +394,9 @@ describe('CostTracker', () => {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
       // Set yesterday's spending in cents: $4.50 = 450, $3.00 = 300, $1.50 = 150
-      await mockRedis.set(`cost:daily:${yesterday}`, '450');
-      await mockRedis.set(`cost:daily:${yesterday}:openai`, '300');
-      await mockRedis.set(`cost:daily:${yesterday}:gemini`, '150');
+      await mockRedis.set(GlobalKeys.costDaily(yesterday), '450');
+      await mockRedis.set(GlobalKeys.costDailyProvider(yesterday, 'openai'), '300');
+      await mockRedis.set(GlobalKeys.costDailyProvider(yesterday, 'gemini'), '150');
 
       // Reset budget
       await costTracker.resetDailyBudget();
@@ -372,28 +405,28 @@ describe('CostTracker', () => {
       expect(await mockRedis.get(`cost:archive:${yesterday}`)).toBe('450');
 
       // Yesterday's keys should be deleted
-      expect(await mockRedis.get(`cost:daily:${yesterday}`)).toBeUndefined();
-      expect(await mockRedis.get(`cost:daily:${yesterday}:openai`)).toBeUndefined();
-      expect(await mockRedis.get(`cost:daily:${yesterday}:gemini`)).toBeUndefined();
+      expect(await mockRedis.get(GlobalKeys.costDaily(yesterday))).toBeUndefined();
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(yesterday, 'openai'))).toBeUndefined();
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(yesterday, 'gemini'))).toBeUndefined();
 
       // Today's keys should be initialized to '0'
-      expect(await mockRedis.get(`cost:daily:${today}`)).toBe('0');
-      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('0');
-      expect(await mockRedis.get(`cost:daily:${today}:gemini`)).toBe('0');
+      expect(await mockRedis.get(GlobalKeys.costDaily(today))).toBe('0');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'openai'))).toBe('0');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'gemini'))).toBe('0');
     });
 
     it('should preserve existing today spending when resetting', async () => {
       const today = new Date().toISOString().split('T')[0];
 
       // Set some today spending (e.g., from late-night activity): $1.25 = 125 cents
-      await mockRedis.set(`cost:daily:${today}`, '125');
-      await mockRedis.set(`cost:daily:${today}:openai`, '125');
+      await mockRedis.set(GlobalKeys.costDaily(today), '125');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'openai'), '125');
 
       await costTracker.resetDailyBudget();
 
       // Today's spending should remain (get/set pattern doesn't overwrite existing)
-      expect(await mockRedis.get(`cost:daily:${today}`)).toBe('125');
-      expect(await mockRedis.get(`cost:daily:${today}:openai`)).toBe('125');
+      expect(await mockRedis.get(GlobalKeys.costDaily(today))).toBe('125');
+      expect(await mockRedis.get(GlobalKeys.costDailyProvider(today, 'openai'))).toBe('125');
     });
 
     it('should log successful budget reset', async () => {
@@ -407,9 +440,9 @@ describe('CostTracker', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // Set spending for today in cents: $2.50 = 250, $2.00 = 200, $0.50 = 50
-      await mockRedis.set(`cost:daily:${today}`, '250');
-      await mockRedis.set(`cost:daily:${today}:openai`, '200');
-      await mockRedis.set(`cost:daily:${today}:gemini`, '50');
+      await mockRedis.set(GlobalKeys.costDaily(today), '250');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'openai'), '200');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'gemini'), '50');
 
       const report = await costTracker.getSpendingReport(1);
 
@@ -430,9 +463,9 @@ describe('CostTracker', () => {
       });
 
       // Set spending for 3 days in cents: $1.00 = 100, $2.00 = 200, $1.50 = 150
-      await mockRedis.set(`cost:daily:${dates[0]}`, '100');
-      await mockRedis.set(`cost:daily:${dates[1]}`, '200');
-      await mockRedis.set(`cost:daily:${dates[2]}`, '150');
+      await mockRedis.set(GlobalKeys.costDaily(dates[0]), '100');
+      await mockRedis.set(GlobalKeys.costDaily(dates[1]), '200');
+      await mockRedis.set(GlobalKeys.costDaily(dates[2]), '150');
 
       const report = await costTracker.getSpendingReport(3);
 
@@ -444,9 +477,9 @@ describe('CostTracker', () => {
       const today = new Date().toISOString().split('T')[0];
 
       // Set values in cents: $3.00 = 300, $2.00 = 200, $1.00 = 100
-      await mockRedis.set(`cost:daily:${today}`, '300');
-      await mockRedis.set(`cost:daily:${today}:openai`, '200');
-      await mockRedis.set(`cost:daily:${today}:gemini`, '100');
+      await mockRedis.set(GlobalKeys.costDaily(today), '300');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'openai'), '200');
+      await mockRedis.set(GlobalKeys.costDailyProvider(today, 'gemini'), '100');
 
       const report = await costTracker.getSpendingReport(1);
 
@@ -600,7 +633,7 @@ describe('CostTracker', () => {
       await costTracker.recordCost(record);
 
       const today = new Date().toISOString().split('T')[0];
-      const spentCents = parseInt((await mockRedis.get(`cost:daily:${today}`)) || '0');
+      const spentCents = parseInt((await mockRedis.get(GlobalKeys.costDaily(today))) || '0');
       // $0.001 rounds to 0 cents (Math.round(0.1) = 0)
       expect(spentCents).toBe(0);
     });
@@ -619,13 +652,13 @@ describe('CostTracker', () => {
       await costTracker.recordCost(record);
 
       const today = new Date().toISOString().split('T')[0];
-      const spentCents = parseInt((await mockRedis.get(`cost:daily:${today}`)) || '0');
+      const spentCents = parseInt((await mockRedis.get(GlobalKeys.costDaily(today))) || '0');
       expect(spentCents).toBe(0);
     });
 
     it('should handle negative remaining budget gracefully', async () => {
       const today = new Date().toISOString().split('T')[0];
-      await mockRedis.set(`cost:daily:${today}`, '600'); // $6.00 = 600 cents (over budget)
+      await mockRedis.set(GlobalKeys.costDaily(today), '600'); // $6.00 = 600 cents (over budget)
 
       const status = await costTracker.getBudgetStatus();
       expect(status.dailyRemaining).toBe(0); // Should be clamped to 0

@@ -50,8 +50,8 @@ export async function sendDailyDigest(context: Context): Promise<void> {
     // Get settings
     const settings = await context.settings.getAll();
     const dailyDigestEnabled = settings.dailyDigestEnabled as boolean;
-    const notificationRecipient = (settings.notificationRecipient as string[])?.[0] || 'all';
-    const notificationRecipientUsernames = settings.notificationRecipientUsernames as string;
+    // Note: notificationRecipient and notificationRecipientUsernames will be used
+    // when the full daily digest implementation is complete (see TODO below)
 
     // Check if daily digest is enabled
     if (!dailyDigestEnabled) {

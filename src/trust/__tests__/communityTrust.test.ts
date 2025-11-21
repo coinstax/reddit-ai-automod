@@ -168,8 +168,8 @@ describe('CommunityTrustManager', () => {
       await manager.updateTrust('user1', 'test', 'APPROVE', 'post');
       await manager.updateTrust('user1', 'test', 'APPROVE', 'post');
 
-      // Track the third post for removal
-      await context.redis.set('approved:tracking:post3', JSON.stringify({
+      // Track the third post for removal (using correct key format)
+      await context.redis.set('v1:1:global:tracking:content:post3', JSON.stringify({
         userId: 'user1',
         subreddit: 'test',
         contentType: 'post',
@@ -198,7 +198,7 @@ describe('CommunityTrustManager', () => {
       await manager.updateTrust('user1', 'test', 'APPROVE', 'post');
 
       // Manually set lastActivity to 3 months ago
-      const key = 'trust:community:user1:test';
+      const key = 'v1:1:user:user1:trust:test';
       const trustData = await context.redis.get(key);
       const trust = JSON.parse(trustData) as CommunityTrust;
       trust.lastActivity = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // 90 days
@@ -220,7 +220,7 @@ describe('CommunityTrustManager', () => {
       await manager.updateTrust('user1', 'test', 'APPROVE', 'post');
 
       // 7 months inactive (set to exactly 7 calendar months ago)
-      const key = 'trust:community:user1:test';
+      const key = 'v1:1:user:user1:trust:test';
       const trustData = await context.redis.get(key);
       const trust = JSON.parse(trustData) as CommunityTrust;
       const sevenMonthsAgo = new Date();

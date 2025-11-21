@@ -42,22 +42,51 @@ export class MockRedis {
     this.store.delete(key);
   }
 
-  async zadd(key: string, score: number, member: string): Promise<void> {
+  // Sorted Set operations (camelCase to match Devvit API)
+  async zAdd(key: string, ...members: Array<{ member: string; score: number }>): Promise<void> {
     const set = this.store.get(key) || [];
-    set.push({ score, member });
+    for (const item of members) {
+      // Remove existing member if present (to update score)
+      const existing = set.findIndex((s: any) => s.member === item.member);
+      if (existing >= 0) {
+        set.splice(existing, 1);
+      }
+      set.push({ score: item.score, member: item.member });
+    }
     this.store.set(key, set);
   }
 
-  async zrange(key: string, min: number, max: number): Promise<string[]> {
-    const set = this.store.get(key) || [];
-    return set
-      .filter((item: any) => item.score >= min && item.score <= max)
-      .map((item: any) => item.member);
+  async zRange(
+    key: string,
+    start: number,
+    stop: number,
+    options?: { by?: 'rank' | 'score'; reverse?: boolean }
+  ): Promise<Array<{ member: string; score: number }>> {
+    let set = this.store.get(key) || [];
+
+    // Sort by score (ascending by default)
+    set = set.sort((a: any, b: any) => a.score - b.score);
+
+    // If reverse, sort descending
+    if (options?.reverse) {
+      set = set.reverse();
+    }
+
+    // Handle negative indices (like Python)
+    const length = set.length;
+    const startIdx = start < 0 ? Math.max(0, length + start) : start;
+    const stopIdx = stop < 0 ? Math.max(0, length + stop + 1) : stop + 1;
+
+    // Return slice
+    return set.slice(startIdx, stopIdx);
   }
 
-  async zrem(key: string, member: string): Promise<void> {
+  async zRem(key: string, members: string[]): Promise<void> {
     const set = this.store.get(key) || [];
-    this.store.set(key, set.filter((item: any) => item.member !== member));
+    this.store.set(
+      key,
+      set.filter((item: any) => !members.includes(item.member))
+    );
   }
 
   // Test utility: Clear all data

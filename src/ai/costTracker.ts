@@ -357,9 +357,9 @@ export class CostTracker {
       // Initialize today's keys to '0' if they don't exist
       const initPromises = [];
       for (const key of [
-        `cost:daily:${today}`,
-        `cost:daily:${today}:openai`,
-        `cost:daily:${today}:gemini`,
+        GlobalKeys.costDaily(today),
+        GlobalKeys.costDailyProvider(today, 'openai'),
+        GlobalKeys.costDailyProvider(today, 'gemini'),
       ]) {
         initPromises.push(
           this.redis.get(key).then((value) => {
