@@ -1,6 +1,6 @@
 {
   "name": "ai-automod-app",
-  "version": "0.1.108",
+  "version": "0.1.109",
   "description": "AI-powered moderation tool for Reddit using Devvit",
   "main": "src/main.tsx",
   "scripts": {
